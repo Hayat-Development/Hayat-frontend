@@ -321,3 +321,130 @@
     flex-direction: column;
   }
 }
+
+/* Sprint 02 — institutions and employees */
+.sprint-shell .navbar-brand img,
+.dashboard-sidebar .navbar-brand img { max-height: 54px; max-width: 150px; }
+.sprint-mobile-header, .sidebar-close { display: none; }
+.sidebar-brand-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.sidebar-backdrop { position: fixed; inset: 0; z-index: 1040; border: 0; background: rgba(20, 31, 45, .52); }
+.sprint-card { border: 1px solid #e7ebef; border-radius: 16px; box-shadow: 0 8px 26px rgba(35, 49, 67, .05); overflow: hidden; }
+.sprint-card-header { min-height: 84px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.sprint-card-header .card-title { margin-bottom: 4px; }
+.sprint-card-header p { font-size: .84rem; }
+.sprint-stats .stat-card { height: 100%; min-height: 112px; display: flex; align-items: center; gap: 16px; padding: 22px; background: #fff; border: 1px solid #e7ebef; border-radius: 16px; }
+.stat-card > span, .section-heading > span, .quick-action > span { width: 48px; height: 48px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px; background: #fff0f1; color: #b4232d; font-size: 1.4rem; }
+.stat-card > span.teal, .section-heading > span.teal, .quick-action > span.teal { color: #0f766e; background: #e9f6f4; }
+.stat-card > span.amber { color: #a16207; background: #fff7df; }
+.stat-card > span.rose { color: #a21caf; background: #f9edfb; }
+.stat-card small, .info-grid small { display: block; color: #67758a; margin-bottom: 3px; }
+.stat-card strong { display: block; color: #1f2c3c; font-size: 1.7rem; line-height: 1.2; }
+.search-control { position: relative; max-width: 520px; }
+.search-control > i { position: absolute; inset-inline-start: 15px; top: 15px; z-index: 1; color: #718096; }
+.search-control .form-control { padding-inline-start: 46px; }
+.bank-name, .employee-cell { display: flex; align-items: center; gap: 12px; min-width: 230px; }
+.bank-name > span, .employee-cell > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: #fff1f2; color: #b4232d; font-weight: 800; }
+.bank-name small, .employee-cell small { display: block; color: #69778b; direction: ltr; text-align: right; }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; font-size: .78rem; font-weight: 750; white-space: nowrap; }
+.status-badge.active { background: #e8f6f2; color: #087569; }
+.status-badge.pending { background: #fff5d8; color: #98610a; }
+.status-badge.suspended { background: #f1f3f5; color: #5f6b7a; }
+.empty-state, .access-denied { padding: 54px 24px; text-align: center; }
+.empty-state > i { font-size: 2.5rem; color: #8190a3; }
+.section-heading { display: flex; align-items: center; gap: 14px; padding-block: 18px; }
+.section-heading p { margin: 2px 0 0; color: #67758a; font-size: .84rem; }
+.required-dot { color: #c62828; margin-inline-start: 4px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; padding-bottom: 30px; }
+.back-link { display: inline-flex; align-items: center; gap: 4px; color: #4c5b70; text-decoration: none; font-weight: 700; }
+.sprint-alert { display: flex; align-items: center; gap: 10px; border: 0; border-radius: 12px; }
+.institution-mini-card { display: flex; align-items: center; gap: 10px; margin: 10px 0 20px; padding: 12px; background: #f8fafb; border: 1px solid #e8edf1; border-radius: 13px; }
+.institution-mini-card .institution-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: #fff0f1; color: #b4232d; }
+.institution-mini-card strong, .institution-mini-card small { display: block; }
+.institution-mini-card strong { font-size: .78rem; }
+.institution-mini-card small { font-size: .7rem; color: #718096; }
+.role-chip { display: inline-flex; align-items: center; gap: 7px; color: #0f766e; background: #e9f6f4; padding: 5px 10px; border-radius: 999px; font-size: .75rem; font-weight: 750; }
+.institution-hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 28px; border: 1px solid #f0dfe1; border-radius: 18px; background: linear-gradient(135deg, #fff7f7, #fff); }
+.institution-hero .eyebrow { color: #a91d2a; font-weight: 700; font-size: .78rem; }
+.institution-hero h2 { margin: 5px 0; }
+.institution-hero p { margin: 0; color: #67758a; }
+.info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 30px; }
+.info-grid strong { display: block; color: #26364a; overflow-wrap: anywhere; }
+.quick-actions { display: grid; gap: 12px; }
+.quick-action { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; padding: 12px; border: 1px solid #e7ebef; border-radius: 13px; }
+.quick-action:hover { border-color: #e0bfc3; background: #fffafa; }
+.quick-action strong, .quick-action small { display: block; }
+.quick-action small { color: #6c7a8d; font-size: .75rem; }
+.modal-backdrop-custom { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 18px; background: rgba(21, 34, 50, .58); }
+.sprint-modal { width: min(100%, 520px); max-height: calc(100vh - 36px); overflow: auto; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.2); }
+.modal-heading { display: flex; justify-content: space-between; gap: 16px; padding: 22px 24px; border-bottom: 1px solid #e7ebef; }
+.modal-heading h2 { margin: 0; font-size: 1.25rem; }
+.modal-heading p { margin: 4px 0 0; color: #6a788b; }
+.modal-body-custom { padding: 24px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px; border-top: 1px solid #e7ebef; }
+.access-denied { background: #fff; border: 1px solid #e7ebef; border-radius: 18px; }
+.access-denied > span { width: 72px; height: 72px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: #fff0f1; color: #b4232d; font-size: 2rem; }
+.access-denied p { color: #66758a; }
+.profile-cover { display: flex; align-items: center; gap: 18px; padding: 30px; background: #fff6f6; }
+.profile-cover > span { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 18px; background: #fff; color: #b4232d; font-size: 2rem; }
+.profile-cover h2, .profile-cover p { margin: 0; }
+.profile-cover p { color: #637287; }
+.logout-dialog { max-width: 430px; text-align: center; }
+.logout-dialog-body { padding: 30px 24px 24px; }
+.logout-dialog-body > span { width: 68px; height: 68px; display: grid; place-items: center; margin: 0 auto 16px; border-radius: 50%; color: #b4232d; background: #fff0f1; font-size: 1.8rem; }
+.logout-dialog-body h2 { margin: 0 0 6px; font-size: 1.35rem; }
+.logout-dialog-body p { margin: 0; color: #69778a; }
+
+@media (max-width: 991.98px) {
+  .sprint-shell .sprint-mobile-header { position: sticky; top: 0; z-index: 1030; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; min-height: 68px; padding: 9px 16px; background: rgba(255, 255, 255, .97); border-bottom: 1px solid #e9edf1; backdrop-filter: blur(10px); }
+  .sprint-mobile-header img { justify-self: center; max-width: 112px; max-height: 45px; }
+  .sprint-mobile-header > span { color: #59687b; font-size: .76rem; font-weight: 700; white-space: nowrap; }
+  .mobile-menu-button, .sidebar-close { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid #e1e7ec; border-radius: 11px; background: #fff; color: #253548; font-size: 1.4rem; }
+  .sprint-shell .sprint-sidebar { position: fixed !important; inset-block: 0; inset-inline-start: 0; z-index: 1050; display: block !important; width: min(320px, 88vw) !important; height: 100dvh; padding: 0; overflow-y: auto; transform: translateX(105%); transition: transform .22s ease; box-shadow: -16px 0 45px rgba(20, 31, 45, .16); }
+  .sprint-shell .sprint-sidebar.is-open { transform: translateX(0); }
+  .sprint-shell .sprint-sidebar .container-fluid { display: flex !important; flex-direction: column; align-items: stretch; flex-wrap: nowrap; min-height: 100%; padding: 18px 16px; }
+  .sprint-shell .sprint-sidebar .navbar-nav { display: flex; flex-direction: column; width: 100%; }
+  .sprint-shell .sprint-sidebar .navbar-brand { margin: 0; padding: 0; }
+  .sprint-shell .sprint-sidebar .sidebar-label { padding-top: 22px; }
+  .sprint-shell .page-wrapper { margin: 0 !important; min-width: 0; }
+  .sprint-shell .app-topbar { display: none; }
+  .sprint-shell .demo-strip { padding-inline: 12px; }
+  .sprint-shell .page-header { margin-top: 22px; }
+  .sprint-shell .page-body { margin-top: 20px; }
+}
+
+@media (max-width: 767px) {
+  .sprint-card-header, .institution-hero { align-items: stretch; flex-direction: column; }
+  .sprint-card-header .btn { width: 100%; }
+  .info-grid { grid-template-columns: 1fr; gap: 18px; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; }
+  .profile-cover { align-items: flex-start; }
+  .profile-cover > span { width: 58px; height: 58px; }
+  .sprint-stats .stat-card { min-height: 96px; padding: 18px; }
+  .responsive-table { margin: 0; }
+  .responsive-table thead { display: none; }
+  .responsive-table tbody { display: grid; gap: 12px; padding: 12px; }
+  .responsive-table tr { display: block; padding: 8px 14px; border: 1px solid #e7ebef; border-radius: 14px; background: #fff; }
+  .responsive-table td { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; padding: 10px 0; border: 0; border-bottom: 1px solid #eef1f4; text-align: start; white-space: normal; }
+  .responsive-table td:last-child { border-bottom: 0; }
+  .responsive-table td::before { content: attr(data-label); flex: 0 0 auto; color: #6a788b; font-size: .75rem; font-weight: 700; }
+  .responsive-table td:first-child { display: block; padding-bottom: 14px; }
+  .responsive-table td:first-child::before { display: block; margin-bottom: 9px; }
+  .responsive-table .bank-name, .responsive-table .employee-cell { min-width: 0; }
+  .responsive-table .btn { min-width: 104px; }
+  .search-control { max-width: none; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .btn { width: 100%; }
+  .modal-heading, .modal-body-custom, .modal-actions { padding-inline: 18px; }
+  .institution-hero { padding: 21px; }
+}
+
+@media (max-width: 420px) {
+  .sprint-mobile-header > span { display: none; }
+  .sprint-mobile-header { grid-template-columns: 44px 1fr 44px !important; }
+  .sprint-card { border-radius: 14px; }
+  .responsive-table tbody { padding: 9px; }
+  .responsive-table td { gap: 10px; }
+  .responsive-table td::before { max-width: 38%; }
+  .profile-cover { flex-direction: column; padding: 22px; }
+}

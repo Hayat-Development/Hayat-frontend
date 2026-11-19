@@ -61,31 +61,18 @@ export default function DashboardPage() {
 
     try {
       await logoutUser();
-
-      localStorage.removeItem("hayat_token");
-      localStorage.removeItem("hayat_user");
-      sessionStorage.removeItem("hayat_challenge_id");
-
-      navigate("/login", {
-        replace: true,
-        state: {
-          message: "تم تسجيل الخروج بنجاح.",
-        },
-      });
-    } catch (err) {
-      if (err.status === 401) {
-        localStorage.removeItem("hayat_token");
-        localStorage.removeItem("hayat_user");
-        sessionStorage.removeItem("hayat_challenge_id");
-
-        navigate("/login", { replace: true });
-      } else {
-        setError(getApiErrorMessages(err).join(" - "));
-        setShowLogoutModal(false);
-      }
-    } finally {
-      setLoggingOut(false);
+    } catch {
+      // Local logout must still work when the backend is unavailable.
     }
+
+    localStorage.removeItem("hayat_token");
+    localStorage.removeItem("hayat_user");
+    sessionStorage.removeItem("hayat_challenge_id");
+    setLoggingOut(false);
+    navigate("/login", {
+      replace: true,
+      state: { message: "تم تسجيل الخروج بنجاح." },
+    });
   }
 
   if (loading) {

@@ -1,5 +1,6 @@
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const defaultApiUrl = import.meta.env.DEV ? "/api/v1" : "https://hayat-backend-lh8k.onrender.com/api/v1";
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || defaultApiUrl).replace(/\/$/, "");
 
 
 export async function apiRequest(path, options = {}) {
@@ -206,4 +207,49 @@ export async function resetPassword(password, passwordConfirmation) {
         }),
     });
 }
+
+export const getBloodBanks = () => apiRequest("/banks");
+
+export const createBloodBank = (form) => apiRequest("/banks", {
+  method: "POST",
+  body: JSON.stringify({
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    region: `${form.city}، ${form.area}`,
+    address: form.address || null,
+    representative: {
+      name: form.representative,
+      email: form.representativeEmail,
+      phone: form.representativePhone,
+      national_id: form.representativeNationalId,
+      password: form.password,
+      password_confirmation: form.passwordConfirmation,
+    },
+  }),
+});
+
+export const updateBloodBankStatus = (id, status) => apiRequest(`/banks/${id}/status`, {
+  method: "PATCH",
+  body: JSON.stringify({ status }),
+});
+
+export const getStaff = (search = "") => apiRequest(`/org/staff${search ? `?search=${encodeURIComponent(search)}` : ""}`);
+
+export const createStaff = (form) => apiRequest("/org/staff", {
+  method: "POST",
+  body: JSON.stringify({
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    national_id: form.nationalId,
+    password: form.password,
+    password_confirmation: form.passwordConfirmation,
+  }),
+});
+
+export const updateStaffStatus = (id, status) => apiRequest(`/org/staff/${id}/status`, {
+  method: "PATCH",
+  body: JSON.stringify({ status }),
+});
 

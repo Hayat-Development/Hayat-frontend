@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { getCurrentUser } from "../api";
 
-export default function ProtectedRoute() {
+export default function ProtectedRoute({ allowedRoles }) {
   const [status, setStatus] = useState("loading");
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -27,8 +28,8 @@ export default function ProtectedRoute() {
           "hayat_user",
           JSON.stringify(user)
         );
-
-        setStatus("authorized");
+        setUser(user);
+        setStatus(allowedRoles?.length && !allowedRoles.includes(user.role) ? "forbidden" : "authorized");
       } catch (error) {
         if (!active) return;
 
@@ -47,7 +48,7 @@ export default function ProtectedRoute() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [allowedRoles]);
 
   if (status === "loading") {
     return <p style={{ textAlign: "center", marginTop: 80 }}>
@@ -67,16 +68,10 @@ export default function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  if (status === "forbidden") {
+    const target = user?.dashboard_key === "system_admin" ? "/admin/blood-banks" : user?.dashboard_key === "organization" ? "/institution/dashboard" : "/dashboard";
+    return <Navigate to={target} replace />;
+  }
+
   return <Outlet />;
-}
-
-
-export async function logoutUser() {
-  await apiRequest("/auth/logout", {
-    method: "POST",
-  });
-
-  localStorage.removeItem("hayat_token");
-  localStorage.removeItem("hayat_user");
-  sessionStorage.removeItem("hayat_challenge_id");
 }
