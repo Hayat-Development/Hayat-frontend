@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { loginUser, getApiErrorMessages } from "../api";
 
 function Login() {
@@ -9,6 +9,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
 
 
@@ -33,11 +34,12 @@ async function handleSubmit(event) {
     const user = result.data.user;
 
     // توجيه مؤقت لحين تجهيز لوحات التحكم
-    if (user.dashboard_key === "donor") {
-      navigate("/dashboard", { replace: true });
-    } else {
-      navigate("/dashboard", { replace: true });
-    }
+    const destination = user.dashboard_key === "system_admin"
+      ? "/admin/blood-banks"
+      : user.dashboard_key === "organization"
+        ? "/institution/dashboard"
+        : "/dashboard";
+    navigate(destination, { replace: true });
 
   } catch (error) {
     if (
@@ -89,6 +91,13 @@ async function handleSubmit(event) {
                       <p className="text-secondary mb-4">
                         خطوة بسيطة، وبترجع تكمّل أثر عطائك.
                       </p>
+
+                      {location.state?.message && (
+                        <div className="alert alert-success sprint-alert" role="status">
+                          <i className="ti ti-circle-check" />
+                          {location.state.message}
+                        </div>
+                      )}
 
                       {error && (
   <div
