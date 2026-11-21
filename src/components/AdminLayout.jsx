@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LogoutDialog from "./LogoutDialog";
+import { showFlashMessage } from "../flashMessage";
 
 const menuItems = [
   { key: "dashboard", title: "نظرة عامة", icon: "ti-layout-dashboard", path: "/admin/dashboard" },
@@ -21,7 +22,8 @@ export default function AdminLayout({ title, description, activePage, children }
     localStorage.removeItem("hayat_token");
     localStorage.removeItem("hayat_user");
     sessionStorage.removeItem("hayat_challenge_id");
-    navigate("/login", { replace: true, state: { message: "تم تسجيل الخروج بنجاح." } });
+    showFlashMessage("تم تسجيل الخروج بنجاح.");
+    navigate("/login", { replace: true });
   }
 
   return <div className="page sprint-shell" dir="rtl">

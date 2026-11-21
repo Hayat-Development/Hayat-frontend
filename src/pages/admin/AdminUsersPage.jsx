@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import { getAdminUsers, getApiErrorMessages, updateAdminUserStatus } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 
 const roleLabels = { donor: "متبرع", bank_rep: "ممثل مؤسسة", bank_staff: "موظف مؤسسة", organization_representative: "ممثل مؤسسة" };
 
@@ -38,7 +39,8 @@ export default function AdminUsersPage() {
     try {
       const result = await updateAdminUserStatus(user.id, status, suspensionReason);
       setUsers((current) => current.map((item) => item.id === user.id ? { ...item, ...result.data } : item));
-      setNotice(result.message || "تم تحديث حالة المستخدم بنجاح."); setSuspending(null); setReason("");
+      setNotice(""); setSuspending(null); setReason("");
+      showFlashMessage(result.message || "تم تحديث حالة المستخدم بنجاح.");
     } catch (requestError) { setError(getApiErrorMessages(requestError).join(" - ")); }
     finally { setUpdating(null); }
   }

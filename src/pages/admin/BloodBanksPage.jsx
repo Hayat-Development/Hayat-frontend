@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
 import { getApiErrorMessages, getBloodBanks, updateBloodBankStatus } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 
 export default function BloodBanksPage() {
   const [banks, setBanks] = useState([]);
@@ -11,7 +12,6 @@ export default function BloodBanksPage() {
   const [updating, setUpdating] = useState(null);
   const [suspending, setSuspending] = useState(null);
   const [reason, setReason] = useState("");
-  const location = useLocation();
 
   useEffect(() => {
     getBloodBanks().then((result) => setBanks(result.data?.data || []))
@@ -30,6 +30,7 @@ export default function BloodBanksPage() {
       const updated = result.data || { ...bank, status, suspension_reason: suspensionReason };
       setBanks((items) => items.map((item) => item.id === bank.id ? { ...item, ...updated } : item));
       setSuspending(null); setReason("");
+      showFlashMessage(status === "suspended" ? "تم إيقاف المؤسسة بنجاح." : "تمت إعادة تفعيل المؤسسة بنجاح.");
     } catch (requestError) {
       setError(getApiErrorMessages(requestError).join(" - "));
     } finally { setUpdating(null); }
@@ -45,7 +46,6 @@ export default function BloodBanksPage() {
   }
 
   return <AdminLayout title="بنوك الدم" description="إدارة المؤسسات والممثلين الرسميين المرتبطين بها." activePage="blood-banks">
-    {location.state?.message && <div className="alert alert-success">{location.state.message}</div>}
     {error && <div className="alert alert-danger">{error}</div>}
     <div className="sprint-stats row g-3 mb-4">
       <div className="col-md-6"><div className="stat-card"><span><i className="ti ti-building-hospital" /></span><div><small>إجمالي المؤسسات</small><strong>{banks.length}</strong></div></div></div>
