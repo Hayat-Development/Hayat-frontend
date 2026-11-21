@@ -146,6 +146,28 @@ export async function resendVerificationCode() {
     return result;
 }
 
+export async function updateVerificationEmail(email) {
+    const challengeId = sessionStorage.getItem("hayat_challenge_id");
+
+    if (!challengeId) {
+        throw new Error("جلسة التحقق غير موجودة. يرجى التسجيل مجدداً.");
+    }
+
+    const result = await apiRequest("/auth/email", {
+        method: "PATCH",
+        body: JSON.stringify({
+            challenge_id: challengeId,
+            email: email.trim(),
+        }),
+    });
+
+    if (result.data?.challenge_id) {
+        sessionStorage.setItem("hayat_challenge_id", result.data.challenge_id);
+    }
+
+    return result;
+}
+
 
 
 
