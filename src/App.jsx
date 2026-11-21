@@ -18,6 +18,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import BloodBanksPage from "./pages/admin/BloodBanksPage";
 import CreateBloodBankPage from "./pages/admin/CreateBloodBankPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import InstitutionDashboardPage from "./pages/institution/InstitutionDashboardPage";
 import EmployeesPage from "./pages/institution/EmployeesPage";
 import InstitutionProfilePage from "./pages/institution/InstitutionProfilePage";
@@ -74,6 +75,7 @@ function App() {
 <Route element={<ProtectedRoute allowedRoles={["system_admin"]} />}>
   <Route path="/admin/blood-banks" element={<BloodBanksPage />} />
   <Route path="/admin/blood-banks/create" element={<CreateBloodBankPage />} />
+  <Route path="/admin/users" element={<AdminUsersPage />} />
   <Route path="/admin/dashboard" element={<Navigate to="/admin/blood-banks" replace />} />
 </Route>
 <Route element={<ProtectedRoute allowedRoles={["bank_rep", "bank_staff"]} />}>

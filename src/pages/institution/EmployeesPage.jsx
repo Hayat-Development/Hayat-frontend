@@ -2,14 +2,68 @@ import { useEffect, useState } from "react";
 import InstitutionLayout from "../../components/InstitutionLayout";
 import { createStaff, getApiErrorMessages, getStaff, updateStaffStatus } from "../../api";
 
-const empty = { name:"", email:"", phone:"", nationalId:"", password:"", passwordConfirmation:"" };
-const labels = { active:"فعال", pending_verification:"بانتظار التفعيل", pending:"بانتظار التفعيل", suspended:"موقوف" };
+const empty = { name: "", email: "", phone: "", nationalId: "", password: "", passwordConfirmation: "" };
+const labels = { active: "فعال", pending_verification: "بانتظار التفعيل", pending: "بانتظار التفعيل", suspended: "موقوف" };
+
 export default function EmployeesPage() {
-  const [employees,setEmployees]=useState([]); const [form,setForm]=useState(empty); const [showForm,setShowForm]=useState(false); const [loading,setLoading]=useState(true); const [saving,setSaving]=useState(false); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
-  useEffect(()=>{ getStaff().then((r)=>setEmployees(r.data?.data||[])).catch((e)=>setError(getApiErrorMessages(e).join(" - "))).finally(()=>setLoading(false)); },[]);
-  const change=(e)=>setForm((x)=>({...x,[e.target.name]:e.target.value}));
-  async function submit(e){e.preventDefault();setSaving(true);setError("");try{const r=await createStaff(form);setEmployees((x)=>[r.data,...x]);setForm(empty);setShowForm(false);setNotice(r.message);}catch(err){setError(getApiErrorMessages(err).join(" - "));}finally{setSaving(false);}}
-  async function toggle(employee){setError("");try{const status=employee.status==="suspended"?"active":"suspended";await updateStaffStatus(employee.id,status);setEmployees((x)=>x.map((i)=>i.id===employee.id?{...i,status}:i));setNotice("تم تحديث حالة الموظف بنجاح.");}catch(err){setError(getApiErrorMessages(err).join(" - "));}}
-  const field=(name,label,type="text")=><div className="mb-3"><label className="form-label" htmlFor={`staff-${name}`}>{label}</label><input required id={`staff-${name}`} name={name} type={type} className="form-control" value={form[name]} onChange={change}/></div>;
-  return <InstitutionLayout title="إدارة الموظفين" description="أضف أعضاء الفريق وتابع حالة حساباتهم.">{notice&&<div className="alert alert-success">{notice}</div>}{error&&<div className="alert alert-danger">{error}</div>}<div className="card sprint-card"><div className="card-header sprint-card-header"><h2 className="card-title">فريق المؤسسة</h2><button className="btn btn-primary" onClick={()=>setShowForm(true)}>إضافة موظف</button></div>{loading?<div className="card-body text-center">جاري التحميل...</div>:<div className="table-responsive"><table className="table table-vcenter card-table"><thead><tr><th>الموظف</th><th>الهاتف</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>{employees.map((e)=><tr key={e.id}><td><strong>{e.name}</strong><small className="d-block">{e.email}</small></td><td>{e.phone}</td><td><span className={`status-badge ${e.status}`}>{labels[e.status]||e.status}</span></td><td><button className="btn btn-outline-secondary btn-sm" disabled={e.status==="pending_verification"||e.status==="pending"} onClick={()=>toggle(e)}>{e.status==="suspended"?"إعادة التفعيل":"إيقاف"}</button></td></tr>)}</tbody></table></div>}</div>{showForm&&<div className="modal-backdrop-custom"><div className="sprint-modal" role="dialog" aria-modal="true"><div className="modal-heading"><h2>إضافة موظف جديد</h2><button className="btn-close" onClick={()=>setShowForm(false)}/></div><form onSubmit={submit}><div className="modal-body-custom">{field("name","الاسم الكامل")}{field("email","البريد الإلكتروني","email")}{field("phone","رقم الهاتف")}{field("nationalId","رقم الهوية")}{field("password","كلمة المرور الأولية","password")}{field("passwordConfirmation","تأكيد كلمة المرور","password")}</div><div className="modal-actions"><button type="button" className="btn btn-outline-secondary" onClick={()=>setShowForm(false)}>إلغاء</button><button className="btn btn-primary" disabled={saving}>{saving?"جاري الحفظ...":"إضافة الموظف"}</button></div></form></div></div>}</InstitutionLayout>;
+  const [employees, setEmployees] = useState([]);
+  const [form, setForm] = useState(empty);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [suspending, setSuspending] = useState(null);
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    getStaff().then((result) => setEmployees(result.data?.data || []))
+      .catch((requestError) => setError(getApiErrorMessages(requestError).join(" - ")))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const change = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+
+  async function submit(event) {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      const result = await createStaff(form);
+      setEmployees((current) => [result.data, ...current]);
+      setForm(empty); setShowForm(false); setNotice(result.message);
+    } catch (requestError) { setError(getApiErrorMessages(requestError).join(" - ")); }
+    finally { setSaving(false); }
+  }
+
+  async function changeStatus(employee, status, suspensionReason = null) {
+    setError("");
+    try {
+      const result = await updateStaffStatus(employee.id, status, suspensionReason);
+      const updated = result.data || { ...employee, status, suspension_reason: suspensionReason };
+      setEmployees((current) => current.map((item) => item.id === employee.id ? { ...item, ...updated } : item));
+      setNotice("تم تحديث حالة الموظف بنجاح."); setSuspending(null); setReason("");
+    } catch (requestError) { setError(getApiErrorMessages(requestError).join(" - ")); }
+  }
+
+  function submitSuspension(event) {
+    event.preventDefault();
+    if (!suspending || reason.trim().length < 3) { setError("سبب التوقيف مطلوب ويجب أن يكون 3 أحرف على الأقل."); return; }
+    changeStatus(suspending, "suspended", reason.trim());
+  }
+
+  const field = (name, label, type = "text") => <div className="mb-3"><label className="form-label" htmlFor={`staff-${name}`}>{label}</label><input required id={`staff-${name}`} name={name} type={type} className="form-control" value={form[name]} onChange={change} /></div>;
+
+  return <InstitutionLayout title="إدارة الموظفين" description="أضف أعضاء الفريق وتابع حالة حساباتهم.">
+    {notice && <div className="alert alert-success">{notice}</div>}{error && <div className="alert alert-danger">{error}</div>}
+    <div className="card sprint-card"><div className="card-header sprint-card-header"><h2 className="card-title">فريق المؤسسة</h2><button className="btn btn-primary" onClick={() => setShowForm(true)}>إضافة موظف</button></div>
+      {loading ? <div className="card-body text-center">جاري التحميل...</div> : <div className="table-responsive"><table className="table table-vcenter card-table"><thead><tr><th>الموظف</th><th>الهاتف</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}>
+        <td><strong>{employee.name}</strong><small className="d-block">{employee.email}</small></td><td>{employee.phone}</td>
+        <td><span className={`status-badge ${employee.status}`}>{labels[employee.status] || employee.status}</span>{employee.suspension_reason && <small className="d-block text-danger mt-1">السبب: {employee.suspension_reason}</small>}</td>
+        <td><button className="btn btn-outline-secondary btn-sm" disabled={employee.status === "pending_verification" || employee.status === "pending"} onClick={() => employee.status === "suspended" ? changeStatus(employee, "active") : (setSuspending(employee), setReason(""), setError(""))}>{employee.status === "suspended" ? "إعادة التفعيل" : "إيقاف"}</button></td>
+      </tr>)}</tbody></table></div>}
+    </div>
+
+    {showForm && <div className="modal-backdrop-custom"><div className="sprint-modal" role="dialog" aria-modal="true"><div className="modal-heading"><h2>إضافة موظف جديد</h2><button className="btn-close" onClick={() => setShowForm(false)} /></div><form onSubmit={submit}><div className="modal-body-custom">{field("name", "الاسم الكامل")}{field("email", "البريد الإلكتروني", "email")}{field("phone", "رقم الهاتف")}{field("nationalId", "رقم الهوية")}{field("password", "كلمة المرور الأولية", "password")}{field("passwordConfirmation", "تأكيد كلمة المرور", "password")}</div><div className="modal-actions"><button type="button" className="btn btn-outline-secondary" onClick={() => setShowForm(false)}>إلغاء</button><button className="btn btn-primary" disabled={saving}>{saving ? "جاري الحفظ..." : "إضافة الموظف"}</button></div></form></div></div>}
+
+    {suspending && <div className="modal-backdrop-custom"><div className="sprint-modal" role="dialog" aria-modal="true"><div className="modal-heading"><h2>إيقاف {suspending.name}</h2><button className="btn-close" onClick={() => setSuspending(null)} /></div><form onSubmit={submitSuspension}><div className="modal-body-custom"><label className="form-label" htmlFor="staff-suspension-reason">سبب التوقيف</label><textarea id="staff-suspension-reason" className="form-control" rows="4" maxLength="500" required value={reason} onChange={(event) => setReason(event.target.value)} placeholder="اكتب سبب توقيف المستخدم..." /></div><div className="modal-actions"><button type="button" className="btn btn-outline-secondary" onClick={() => setSuspending(null)}>إلغاء</button><button className="btn btn-danger">تأكيد التوقيف</button></div></form></div></div>}
+  </InstitutionLayout>;
 }

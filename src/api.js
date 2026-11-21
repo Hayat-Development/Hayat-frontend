@@ -248,12 +248,17 @@ export async function resetPassword(password, passwordConfirmation) {
 
 export const getBloodBanks = () => apiRequest("/banks");
 
+export const getAdminUsers = (search = "") => apiRequest(`/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`);
+
+export const updateAdminUserStatus = (id, status, reason = null) => apiRequest(`/admin/users/${id}/status`, {
+  method: "PATCH",
+  body: JSON.stringify({ status, reason }),
+});
+
 export const createBloodBank = (form) => apiRequest("/banks", {
   method: "POST",
   body: JSON.stringify({
     name: form.name,
-    email: form.email,
-    phone: form.phone,
     region: `${form.city}، ${form.area}`,
     address: form.address || null,
     representative: {
@@ -267,9 +272,9 @@ export const createBloodBank = (form) => apiRequest("/banks", {
   }),
 });
 
-export const updateBloodBankStatus = (id, status) => apiRequest(`/banks/${id}/status`, {
+export const updateBloodBankStatus = (id, status, reason = null) => apiRequest(`/banks/${id}/status`, {
   method: "PATCH",
-  body: JSON.stringify({ status }),
+  body: JSON.stringify({ status, reason }),
 });
 
 export const getStaff = (search = "") => apiRequest(`/org/staff${search ? `?search=${encodeURIComponent(search)}` : ""}`);
@@ -286,8 +291,8 @@ export const createStaff = (form) => apiRequest("/org/staff", {
   }),
 });
 
-export const updateStaffStatus = (id, status) => apiRequest(`/org/staff/${id}/status`, {
+export const updateStaffStatus = (id, status, reason = null) => apiRequest(`/org/staff/${id}/status`, {
   method: "PATCH",
-  body: JSON.stringify({ status }),
+  body: JSON.stringify({ status, reason }),
 });
 
