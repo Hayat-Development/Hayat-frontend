@@ -88,6 +88,22 @@ export function getApiErrorMessages(error) {
     return [error.message || "حدث خطأ غير متوقع"];
 }
 
+export function getApiFieldErrors(error, fieldMap = {}) {
+    const apiErrors = error.data?.errors;
+
+    if (!apiErrors || typeof apiErrors !== "object") {
+        return {};
+    }
+
+    return Object.entries(apiErrors).reduce((result, [apiField, messages]) => {
+        const formField = fieldMap[apiField] || apiField;
+        result[formField] = (Array.isArray(messages) ? messages : [messages])
+            .map(String)
+            .join(" - ");
+        return result;
+    }, {});
+}
+
 
 
 export async function verifyEmail(code) {

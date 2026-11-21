@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { registerUser, getApiErrorMessages } from "../api";
+import { registerUser, getApiErrorMessages, getApiFieldErrors } from "../api";
 import { useState } from "react";
 
 const initialForm = {
@@ -108,6 +108,15 @@ export default function Register() {
             await registerUser(form);
             navigate("/verify-email");
         } catch (error) {
+            const apiFieldErrors = getApiFieldErrors(error, {
+                name: "fullName",
+                national_id: "nationalId",
+                password_confirmation: "confirmPassword",
+                blood_type: "bloodType",
+                last_donation_date: "lastDonation",
+            });
+
+            setErrors((current) => ({ ...current, ...apiFieldErrors }));
             setMessage(getApiErrorMessages(error).join(" - "));
         } finally {
             setLoading(false);
