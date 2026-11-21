@@ -8,6 +8,7 @@ import {
   updateVerificationEmail,
   getApiErrorMessages,
 } from "../api";
+import { showFlashMessage } from "../flashMessage";
 
 
 export default function VerifyEmail() {
@@ -50,13 +51,13 @@ export default function VerifyEmail() {
     try {
       const result = await verifyEmail(code);
 
-      setMessage(result.message || "تم تأكيد البريد الإلكتروني بنجاح.");
+      showFlashMessage(result.message || "تم تأكيد البريد الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول.", "success", 2000);
 
       sessionStorage.removeItem("hayat_challenge_id");
 
       setTimeout(() => {
         navigate("/login", { replace: true });
-      }, 2000);
+      }, 2100);
     } catch (err) {
       setError(getApiErrorMessages(err).join(" - "));
     } finally {

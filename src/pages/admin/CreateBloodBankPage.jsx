@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
 import { createBloodBank, getApiErrorMessages } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 
 const empty = {
   name: "", city: "غزة", area: "", address: "", representative: "",
@@ -20,7 +21,8 @@ export default function CreateBloodBankPage() {
     event.preventDefault(); setSaving(true); setError("");
     try {
       await createBloodBank(form);
-      navigate("/admin/blood-banks", { replace: true, state: { message: "تم إنشاء المؤسسة والممثل الرسمي بنجاح" } });
+      showFlashMessage("تم إنشاء المؤسسة والممثل الرسمي بنجاح.");
+      navigate("/admin/blood-banks", { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessages(requestError).join(" - "));
     } finally { setSaving(false); }

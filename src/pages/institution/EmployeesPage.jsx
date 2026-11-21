@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import InstitutionLayout from "../../components/InstitutionLayout";
 import { createStaff, getApiErrorMessages, getStaff, updateStaffStatus } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 
 const empty = { name: "", email: "", phone: "", nationalId: "", password: "", passwordConfirmation: "" };
 const labels = { active: "فعال", pending_verification: "بانتظار التفعيل", pending: "بانتظار التفعيل", suspended: "موقوف" };
@@ -29,7 +30,8 @@ export default function EmployeesPage() {
     try {
       const result = await createStaff(form);
       setEmployees((current) => [result.data, ...current]);
-      setForm(empty); setShowForm(false); setNotice(result.message);
+      setForm(empty); setShowForm(false); setNotice("");
+      showFlashMessage(result.message || "تمت إضافة الموظف بنجاح.");
     } catch (requestError) { setError(getApiErrorMessages(requestError).join(" - ")); }
     finally { setSaving(false); }
   }
@@ -40,7 +42,8 @@ export default function EmployeesPage() {
       const result = await updateStaffStatus(employee.id, status, suspensionReason);
       const updated = result.data || { ...employee, status, suspension_reason: suspensionReason };
       setEmployees((current) => current.map((item) => item.id === employee.id ? { ...item, ...updated } : item));
-      setNotice("تم تحديث حالة الموظف بنجاح."); setSuspending(null); setReason("");
+      setNotice(""); setSuspending(null); setReason("");
+      showFlashMessage(status === "suspended" ? "تم إيقاف الموظف بنجاح." : "تمت إعادة تفعيل الموظف بنجاح.");
     } catch (requestError) { setError(getApiErrorMessages(requestError).join(" - ")); }
   }
 
