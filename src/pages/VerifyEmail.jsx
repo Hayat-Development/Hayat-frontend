@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   verifyEmail,
   resendVerificationCode,
+  updateVerificationEmail,
   getApiErrorMessages,
 } from "../api";
 
@@ -18,6 +19,9 @@ export default function VerifyEmail() {
   const [error, setError] = useState("");
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [email, setEmail] = useState("");
+  const [updatingEmail, setUpdatingEmail] = useState(false);
 
   useEffect(() => {
   if (cooldown <= 0) return;
@@ -96,6 +100,34 @@ export default function VerifyEmail() {
   }
 }
 
+  async function handleEmailUpdate(e) {
+    e.preventDefault();
+
+    if (updatingEmail || loading || resending) return;
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("أدخل بريداً إلكترونياً صحيحاً.");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const result = await updateVerificationEmail(email);
+      setMessage(result.message || "تم تعديل البريد الإلكتروني وإرسال رمز تحقق جديد.");
+      setEditingEmail(false);
+      setEmail("");
+      setCode("");
+      setCooldown(60);
+    } catch (err) {
+      setError(getApiErrorMessages(err).join(" - "));
+    } finally {
+      setUpdatingEmail(false);
+    }
+  }
+
   return (
     <main id="main-content" dir="rtl">
       <section className="auth-section public-auth">
@@ -119,6 +151,46 @@ export default function VerifyEmail() {
                     <div className="verification-icon">
                       <i className="ti ti-mail-check" aria-hidden="true"></i>
                     </div>
+
+                    <div className="text-center mb-3">
+                      <button
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => {
+                          setEditingEmail((value) => !value);
+                          setError("");
+                        }}
+                        disabled={loading || resending || updatingEmail}
+                      >
+                        أدخلت بريداً خاطئاً؟ تعديل البريد الإلكتروني
+                      </button>
+                    </div>
+
+                    {editingEmail && (
+                      <form className="mb-4" onSubmit={handleEmailUpdate} noValidate>
+                        <label className="form-label" htmlFor="updated-email">
+                          البريد الإلكتروني الجديد
+                        </label>
+                        <input
+                          className="form-control mb-2"
+                          id="updated-email"
+                          type="email"
+                          dir="ltr"
+                          autoComplete="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="name@example.com"
+                          required
+                        />
+                        <button
+                          className="btn btn-outline-primary w-100"
+                          type="submit"
+                          disabled={updatingEmail}
+                        >
+                          {updatingEmail ? "جاري تعديل البريد..." : "حفظ البريد وإرسال رمز جديد"}
+                        </button>
+                      </form>
+                    )}
 
                     {message && (
                       <div className="alert alert-success" role="status">
