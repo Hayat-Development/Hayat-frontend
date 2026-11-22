@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { getCurrentUser } from "../api";
+import { getCurrentUser } from "../../api";
 
 export default function ProtectedRoute() {
   const [status, setStatus] = useState("loading");
@@ -68,15 +68,4 @@ export default function ProtectedRoute() {
   }
 
   return <Outlet />;
-}
-
-
-export async function logoutUser() {
-  await apiRequest("/auth/logout", {
-    method: "POST",
-  });
-
-  localStorage.removeItem("hayat_token");
-  localStorage.removeItem("hayat_user");
-  sessionStorage.removeItem("hayat_challenge_id");
 }

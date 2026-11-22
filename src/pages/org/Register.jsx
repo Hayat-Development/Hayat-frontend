@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { registerUser, getApiErrorMessages } from "../api";
+import { registerUser, getApiErrorMessages } from "../../api";
 import { useState } from "react";
 
 const initialForm = {

@@ -1,5 +1,19 @@
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import {
+  listBanks as mockListBanks,
+  getBank as mockGetBank,
+  createBankWithRep as mockCreateBankWithRep,
+  addRepresentative as mockAddRepresentative,
+  setBankStatus as mockSetBankStatus,
+} from "./services/sprint2Api.js";
+
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "https://hayat-backend-lh8k.onrender.com/api/v1"
+)
+  .replace(/^\[|\]$/g, "")
+  .trim();
 
 
 export async function apiRequest(path, options = {}) {
@@ -8,6 +22,7 @@ export async function apiRequest(path, options = {}) {
   const publicPaths = [
     "/auth/register",
     "/auth/login",
+    "/auth/activate",
     "/auth/forgot-password",
     "/auth/reset-password",
   ];
@@ -207,3 +222,97 @@ export async function resetPassword(password, passwordConfirmation) {
     });
 }
 
+export async function activateAccount({
+  token,
+  email,
+  password,
+  passwordConfirmation,
+  password_confirmation,
+}) {
+  return apiRequest("/auth/activate", {
+    method: "POST",
+    body: JSON.stringify({
+      token,
+      ...(email ? { email } : {}),
+      password,
+      password_confirmation: passwordConfirmation || password_confirmation,
+    }),
+  });
+}
+
+export async function getAdminBanks() {
+  const token = localStorage.getItem("hayat_token");
+  if (!token && sessionStorage.getItem("mock_as")) {
+    return mockListBanks();
+  }
+  return apiRequest("/admin/banks", { method: "GET" });
+}
+
+export async function getBank(bankId) {
+  const token = localStorage.getItem("hayat_token");
+  if (!token && sessionStorage.getItem("mock_as")) {
+    return mockGetBank(bankId);
+  }
+  return apiRequest(`/admin/banks/${bankId}`, { method: "GET" });
+}
+
+export async function createAdminBank(payload) {
+  return apiRequest("/admin/banks", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createBankWithRep({ bank, representative }) {
+  const token = localStorage.getItem("hayat_token");
+  if (!token && sessionStorage.getItem("mock_as")) {
+    return mockCreateBankWithRep({ bank, representative });
+  }
+  return createAdminBank({ ...bank, representative });
+}
+
+export async function addRepresentative(bankId, representative) {
+  const token = localStorage.getItem("hayat_token");
+  if (!token && sessionStorage.getItem("mock_as")) {
+    return mockAddRepresentative(bankId, representative);
+  }
+  return apiRequest(`/admin/banks/${bankId}/representative`, {
+    method: "POST",
+    body: JSON.stringify(representative),
+  });
+}
+
+export async function setBankStatus(bankId, status) {
+  const token = localStorage.getItem("hayat_token");
+  if (!token && sessionStorage.getItem("mock_as")) {
+    return mockSetBankStatus(bankId, status);
+  }
+  return apiRequest(`/admin/banks/${bankId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function getOrgStaff(params = "") {
+  const query = params ? `?${params}` : "";
+  return apiRequest(`/org/staff${query}`, { method: "GET" });
+}
+
+export async function createOrgStaff(payload) {
+  return apiRequest("/org/staff", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function suspendOrgStaff(staffId) {
+  return apiRequest(`/org/staff/${staffId}/suspend`, { method: "PATCH" });
+}
+
+export async function reactivateOrgStaff(staffId) {
+  return apiRequest(`/org/staff/${staffId}/reactivate`, { method: "PATCH" });
+}
+
+export async function resendStaffActivation(staffId) {
+  return apiRequest(`/org/staff/${staffId}/resend-activation`, { method: "POST" });
+}

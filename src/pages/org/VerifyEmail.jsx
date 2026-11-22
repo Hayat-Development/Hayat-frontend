@@ -6,7 +6,7 @@ import {
   verifyEmail,
   resendVerificationCode,
   getApiErrorMessages,
-} from "../api";
+} from "../../api";
 
 
 export default function VerifyEmail() {

@@ -9,14 +9,25 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import VerifyEmail from "./pages/VerifyEmail";
-import ProtectedRoute from "./components/ProtectedRoute";
-import DashboardPage from "./pages/DashboardPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+import Login from "./pages/org/Login";
+import Register from "./pages/org/Register";
+import VerifyEmail from "./pages/org/VerifyEmail";
+import ProtectedRoute from "./components/org/ProtectedRoute";
+import DashboardPage from "./pages/org/DashboardPage";
+import ForgotPasswordPage from "./pages/org/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/org/ResetPasswordPage";
 import "./App.css";
+import "./styles/org.css";
+import { ErrorScreen } from "./components/org/ui";
+import RoleRoute from "./components/org/RoleRoute";
+import { ROLES } from "./constants/org";
+import ActivatePage from "./pages/org/ActivatePage";
+import BanksAdminPage from "./pages/org/BanksAdminPage";
+import BankFormPage from "./pages/org/BankFormPage";
+import BankDetailsPage from "./pages/org/BankDetailsPage";
+import SettingsPage from "./pages/org/SettingsPage";
+import OrgDashboardPage from "./pages/org/OrgDashboardPage";
+import StaffPage from "./pages/org/StaffPage";
 
 
 function PageTitle() {
@@ -30,6 +41,12 @@ function PageTitle() {
       "/dashboard": "لوحة التحكم",
       "/forgot-password": "استعادة كلمة المرور",
       "/reset-password": "تعيين كلمة مرور جديدة",
+      "/activate": "تفعيل الحساب",
+      "/admin/banks": "إدارة بنوك الدم",
+      "/admin/banks/new": "إضافة بنك دم",
+      "/org": "لوحة المؤسسة",
+      "/org/staff": "إدارة الموظفين",
+      "/settings": "الإعدادات",
     };
 
     document.title = `حياة | ${titles[pathname] || "الصفحة غير موجودة"}`;
@@ -61,7 +78,25 @@ function App() {
   path="/reset-password"
   element={<ResetPasswordPage />}
 />
-<Route path="*" element={<h1>الصفحة غير موجودة</h1>} />
+<Route path="/activate" element={<ActivatePage />} />
+
+        {/* السبرنت 2 — الحماية الفعلية عند الباك، والـ RoleRoute لتجربة الواجهة */}
+        <Route element={<RoleRoute allow={[ROLES.ADMIN]} />}>
+          <Route path="/admin/banks" element={<BanksAdminPage />} />
+          <Route path="/admin/banks/new" element={<BankFormPage />} />
+          <Route path="/admin/banks/:bankId" element={<BankDetailsPage />} />
+          <Route path="/admin/banks/:bankId/representative" element={<BankFormPage />} />
+        </Route>
+        <Route element={<RoleRoute allow={[ROLES.REP, ROLES.STAFF]} />}>
+          <Route path="/org" element={<OrgDashboardPage />} />
+        </Route>
+        <Route element={<RoleRoute allow={[ROLES.ADMIN, ROLES.REP, ROLES.STAFF]} />}>
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
+        <Route element={<RoleRoute allow={[ROLES.REP]} />}>
+          <Route path="/org/staff" element={<StaffPage />} />
+        </Route>
+<Route path="*" element={<ErrorScreen full kind="not_found" backTo="/" backText="العودة للرئيسية" />} />
       </Routes>
     </BrowserRouter>
   );

@@ -5,7 +5,7 @@ import {
   getCurrentUser,
   logoutUser,
   getApiErrorMessages,
-} from "../api";
+} from "../../api";
 
 export default function DashboardPage() {
   const navigate = useNavigate();

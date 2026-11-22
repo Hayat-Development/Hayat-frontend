@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser, getApiErrorMessages } from "../api";
+import { loginUser, getApiErrorMessages } from "../../api";
+import { MESSAGES, ROLES, canonicalCode, roleHome } from "../../constants/org";
 
 function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -10,6 +11,16 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // جولة تجريبية: المتبرع يعبّي الحقول (دخول حقيقي)، والبقية تفتح لوحتها بالبيانات الوهمية للسبرنت 2.
+  // TODO عند ربط الباك: احذف enterDemo واجعل الأزرار تعبّي حسابات تجريبية حقيقية.
+  const DEMO_PASSWORD = "Demo12345!";
+  function fillDonor() { setIdentifier("ahmad@hayat.demo"); setPassword(DEMO_PASSWORD); setError(""); }
+  function enterDemo(key, role) {
+    sessionStorage.setItem("mock_as", key);
+    sessionStorage.removeItem("mock_scn");
+    navigate(roleHome(role));
+  }
 
 
   
@@ -32,12 +43,8 @@ async function handleSubmit(event) {
 
     const user = result.data.user;
 
-    // توجيه مؤقت لحين تجهيز لوحات التحكم
-    if (user.dashboard_key === "donor") {
-      navigate("/dashboard", { replace: true });
-    } else {
-      navigate("/dashboard", { replace: true });
-    }
+    // التوجيه حسب الدور (المتبرع → /dashboard، مدير النظام → /admin/banks، ممثل/موظف → /org)
+    navigate(roleHome(user.role), { replace: true });
 
   } catch (error) {
     if (
@@ -55,6 +62,13 @@ async function handleSubmit(event) {
         navigate("/verify-email");
         return;
       }
+    }
+
+    const code = canonicalCode(error.data?.code);
+    if (code === "ACCOUNT_PENDING") { navigate("/activate"); return; }
+    if (MESSAGES[code] && ["ACCOUNT_SUSPENDED", "ORG_SUSPENDED", "INVALID_CREDENTIALS"].includes(code)) {
+      setError(code === "ORG_SUSPENDED" && error.data?.reason ? `${MESSAGES[code]} السبب: ${error.data.reason}` : MESSAGES[code]);
+      return;
     }
 
     setError(
@@ -91,19 +105,7 @@ async function handleSubmit(event) {
                       </p>
 
                       {error && (
-  <div
-    role="alert"
-    style={{
-      backgroundColor: "#ffe0e0",
-      color: "#b00020",
-      padding: "15px",
-      marginBottom: "50px",
-      border: "2px solid red",
-      borderRadius: "8px",
-    }}
-  >
-    {error}
-  </div>
+  <div role="alert" className="org-notice org-notice-error"><i className="ti ti-alert-circle" aria-hidden="true" /><span>{error}</span></div>
 )}
 
                       <form onSubmit={handleSubmit} noValidate>
@@ -200,6 +202,16 @@ async function handleSubmit(event) {
                       <div className="auth-footer">
                         أول مرة معنا؟{" "}
                         <a href="/register">أنشئ حساب متبرع</a>
+                      </div>
+
+                      <div className="demo-tour">
+                        <strong>خذ جولة في حياة</strong>
+                        <div className="demo-tour-grid">
+                          <button type="button" onClick={fillDonor}><i className="ti ti-heart-handshake" aria-hidden="true"></i>متبرع</button>
+                          <button type="button" onClick={() => enterDemo("rep", ROLES.REP)}><i className="ti ti-building-hospital" aria-hidden="true"></i>ممثل المؤسسة</button>
+                          <button type="button" onClick={() => enterDemo("staff", ROLES.STAFF)}><i className="ti ti-users" aria-hidden="true"></i>موظف بنك دم</button>
+                          <button type="button" onClick={() => enterDemo("admin", ROLES.ADMIN)}><i className="ti ti-shield-check" aria-hidden="true"></i>مدير النظام</button>
+                        </div>
                       </div>
                     </div>
                   </div>

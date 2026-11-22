@@ -5,7 +5,7 @@ import {
   resetPassword,
   readResetLinkParameters,
   getApiErrorMessages,
-} from "../api";
+} from "../../api";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
