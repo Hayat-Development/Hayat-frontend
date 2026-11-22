@@ -2,6 +2,7 @@ import OrgShell from "../../components/org/OrgShell";
 import { Link } from "react-router-dom";
 import { StatusChip } from "../../components/org/ui";
 import { useSession } from "../../context/SessionContext";
+import { normalizeRole } from "../../constants/org";
 
 export default function OrgDashboardPage() {
   const session = useSession() || {};
@@ -21,7 +22,7 @@ export default function OrgDashboardPage() {
       </section>
       <h2 className="org-h2 mt-4">وظائف المؤسسة</h2>
       <div className="org-ops">
-        {role === "rep_bank" && (
+        {normalizeRole(role) === "rep_bank" && (
           <Link to="/org/staff" className="org-op"><i className="ti ti-users" /><strong>إدارة الموظفين</strong><span>إضافة الفريق وإيقافه وإعادة تفعيله</span></Link>
         )}
         <div className="org-op is-soon" aria-disabled="true"><i className="ti ti-droplet" /><strong>طلبات الدم</strong><span>قريبًا</span></div>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { fetchSession } from "../../services/sprint2Api";
 import { SessionContext } from "../../context/SessionContext";
-import { roleHome } from "../../constants/org";
+import { normalizeRole, roleHome } from "../../constants/org";
 import { classifyError, clearAuth } from "../../utils/org";
 import { ErrorScreen, TableSkeleton } from "./ui";
 
@@ -28,9 +28,11 @@ export default function RoleRoute({ allow }) {
 
   const { session } = state;
   if (session.status === "suspended") return <ErrorScreen full kind="account_suspended" backTo="/login" backText="العودة لتسجيل الدخول" />;
-  if (!allow.includes(session.role)) {
-    const isStaff = session.role === "staff_bank";
-    return <ErrorScreen full kind="forbidden" backTo={roleHome(session.role)} detail={isStaff ? "إدارة الموظفين متاحة للممثل الرسمي فقط." : undefined} />;
+  const role = normalizeRole(session?.role);
+  const allowed = allow.map(normalizeRole);
+  if (!allowed.includes(role)) {
+    const isStaff = role === "staff_bank";
+    return <ErrorScreen full kind="forbidden" backTo={roleHome(role)} detail={isStaff ? "إدارة الموظفين متاحة للممثل الرسمي فقط." : undefined} />;
   }
   return <SessionContext.Provider value={session}><Outlet /></SessionContext.Provider>;
 }

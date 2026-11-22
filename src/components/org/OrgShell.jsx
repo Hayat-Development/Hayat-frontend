@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSession } from "../../context/SessionContext";
-import { ROLES } from "../../constants/org";
+import { ROLES, normalizeRole } from "../../constants/org";
 import { clearAuth } from "../../utils/org";
 import { logoutUser } from "../../api";
 import { ErrorScreen } from "./ui";
@@ -10,7 +10,8 @@ export default function OrgShell({ title, actions, children }) {
   const s = useSession() || {};
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const suspended = s?.role !== ROLES.ADMIN && s?.bank?.status === "suspended";
+  const userRole = normalizeRole(s?.role);
+  const suspended = userRole !== ROLES.ADMIN && s?.bank?.status === "suspended";
 
   async function logout() {
     try { await logoutUser(); } catch {}
@@ -18,12 +19,12 @@ export default function OrgShell({ title, actions, children }) {
     navigate("/login", { replace: true });
   }
 
-  const links = s?.role === ROLES.ADMIN
+  const links = userRole === ROLES.ADMIN
     ? [{ to: "/admin/banks", icon: "ti-building-hospital", text: "بنوك الدم" }]
     : suspended ? [] : [
         { to: "/org", icon: "ti-layout-dashboard", text: "اللوحة", end: true },
         { soon: true, icon: "ti-droplet", text: "الطلبات" },
-        ...(s?.role === ROLES.REP ? [{ to: "/org/staff", icon: "ti-users", text: "إدارة الموظفين" }] : []),
+        ...(userRole === ROLES.REP ? [{ to: "/org/staff", icon: "ti-users", text: "إدارة الموظفين" }] : []),
       ];
 
   if (!suspended) links.push({ to: "/settings", icon: "ti-settings", text: "الإعدادات" });

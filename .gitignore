@@ -159,6 +159,9 @@ vite.config.ts.timestamp-*
 node_modules/
 dist/
 
+# Document files
+*.pdf
+
 # Temporary backup files
 .gitignore.backup
 README.backup.md

@@ -2,11 +2,21 @@ export const ROLES = {
   ADMIN: "system_admin",
   REP: "rep_bank",
   STAFF: "staff_bank",
+  BANK_REP: "bank_rep",
+  BANK_STAFF: "bank_staff",
 };
 
+export function normalizeRole(role) {
+  if (role === "bank_rep") return "rep_bank";
+  if (role === "bank_staff") return "staff_bank";
+  if (role === "admin") return "system_admin";
+  return role;
+}
+
 export function roleHome(role) {
-  if (role === ROLES.ADMIN) return "/admin/banks";
-  if (role === ROLES.REP || role === ROLES.STAFF) return "/org";
+  const r = normalizeRole(role);
+  if (r === ROLES.ADMIN) return "/admin/banks";
+  if (r === ROLES.REP || r === ROLES.STAFF) return "/org";
   return "/dashboard";
 }
 

@@ -5,7 +5,7 @@ import { useSession } from "../../context/SessionContext";
 import useBlockingError from "../../hooks/useBlockingError";
 import useDebounce from "../../hooks/useDebounce";
 import { createStaff, listStaff, reactivateStaff, resendActivation, suspendStaff } from "../../services/sprint2Api";
-import { MESSAGES, SUCCESS } from "../../constants/org";
+import { MESSAGES, SUCCESS, normalizeRole } from "../../constants/org";
 import { isEmail, isPhone, normalizeEmail, normalizePhone } from "../../utils/org";
 
 export default function StaffPage() {
@@ -72,7 +72,7 @@ export default function StaffPage() {
                 <thead><tr><th>الاسم</th><th>البريد</th><th>الحالة</th><th>الإجراء</th></tr></thead>
                 <tbody>
                   {rows.map((m) => {
-                    const isRep = m.role === "rep_bank";
+                    const isRep = normalizeRole(m.role) === "rep_bank";
                     return (
                       <tr key={m.id}>
                         <td data-label="الاسم"><strong>{m.name}</strong>{isRep && <span className="org-tag">{m.id === me.id ? "أنت · الممثل الرسمي" : "الممثل الرسمي"}</span>}</td>
