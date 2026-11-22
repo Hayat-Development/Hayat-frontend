@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { classifyError, clearAuth } from "../utils/org";
 
-// معالج مركزي: يرجع true إذا كان الخطأ "مانعًا" وتم تحويله لشاشة مفهومة.
 export default function useBlockingError() {
   const navigate = useNavigate();
   const [block, setBlock] = useState(null);

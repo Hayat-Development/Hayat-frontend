@@ -1,6 +1,5 @@
-// ثوابت السبرنت 2 — عدّل القيم هنا فقط إذا اختلفت عن الباك.
 export const ROLES = {
-  ADMIN: "system_admin", // TODO: طابقها مع اسم دور مدير النظام عند الباك
+  ADMIN: "system_admin",
   REP: "rep_bank",
   STAFF: "staff_bank",
 };
@@ -11,7 +10,6 @@ export function roleHome(role) {
   return "/dashboard";
 }
 
-// الـ PDF يكتب بعض الأكواد بصيغتين (مثل EMAIL_TAKEN / TAKEN_EMAIL)، فكل صيغة تُحوَّل لكود واحد.
 const ALIASES = {
   VALIDATION: ["VALIDATION_FAILED", "FAILED_VALIDATION"],
   EMAIL_TAKEN: ["EMAIL_TAKEN", "TAKEN_EMAIL"],

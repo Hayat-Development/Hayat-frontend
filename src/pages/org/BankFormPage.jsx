@@ -7,7 +7,6 @@ import { addRepresentative, createBankWithRep } from "../../services/sprint2Api.
 import { MESSAGES, REGIONS, SUCCESS } from "../../constants/org";
 import { isEmail, isPhone, mapFieldErrors, normalizeEmail, normalizePhone } from "../../utils/org";
 
-// TODO: طابق مفاتيح 422 القادمة من الباك مع أسماء حقول النموذج
 const KEY_MAP = {
   "bank.name": "name", "bank.email": "email", "bank.contact_email": "email", contact_email: "email",
   "bank.phone": "phone", "bank.contact_phone": "phone", contact_phone: "phone", "bank.region": "region", city: "region",
@@ -16,14 +15,14 @@ const KEY_MAP = {
 const EMPTY = { name: "", email: "", phone: "", region: "", rep_name: "", rep_email: "", rep_phone: "" };
 
 export default function BankFormPage() {
-  const { bankId } = useParams(); // موجود = إضافة ممثل لبنك قائم
+  const { bankId } = useParams();
   const repOnly = !!bankId;
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [banner, setBanner] = useState("");
   const [saving, setSaving] = useState(false);
-  const lock = useRef(false); // يمنع النقر المزدوج قبل تحديث الـ state
+  const lock = useRef(false);
   const [block, handle] = useBlockingError();
 
   const set = (k) => (e) => { setForm({ ...form, [k]: e.target.value }); if (errors[k]) setErrors({ ...errors, [k]: undefined }); };

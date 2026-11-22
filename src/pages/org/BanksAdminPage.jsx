@@ -12,7 +12,7 @@ export default function BanksAdminPage() {
   const loc = useLocation();
   const [notice, setNotice] = useState(loc.state?.notice ? { type: "success", text: loc.state.notice } : null);
   const [linkUrl, setLinkUrl] = useState(loc.state?.link || "");
-  const [confirm, setConfirm] = useState(null); // { bank, next }
+  const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [block, handle] = useBlockingError();
   const navigate = useNavigate();

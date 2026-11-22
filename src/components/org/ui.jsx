@@ -7,7 +7,7 @@ const STATUS = {
   suspended: { text: "موقوف", icon: "ti-ban", cls: "stop" },
   no_rep: { text: "بانتظار الممثل", icon: "ti-user-plus", cls: "wait" },
 };
-// الحالة بنص + لون + أيقونة معًا (لا يعتمد على اللون وحده)
+
 export function StatusChip({ status, label }) {
   const s = STATUS[status] || STATUS.pending;
   return <span className={`org-chip org-chip-${s.cls}`}><i className={`ti ${s.icon}`} aria-hidden="true" />{label || s.text}</span>;
@@ -39,7 +39,7 @@ export function Field({ id, label, required, error, hint, ltr, children }) {
     </div>
   );
 }
-// حقل نص: البريد والهاتف dir=ltr مع محاذاة لليمين داخل الواجهة العربية
+
 export function TextInput({ id, ltr, error, ...rest }) {
   return (
     <input id={id} name={id} className={`form-control${error ? " is-invalid" : ""}${ltr ? " org-ltr" : ""}`}
@@ -84,7 +84,6 @@ export function Pagination({ meta, onPage }) {
   );
 }
 
-// رابط التفعيل يظهر داخل الواجهة في النسخة التجريبية (بدون بريد حقيقي) — احذفه عند تفعيل البريد.
 export function ActivationLinkBox({ url }) {
   const [copied, setCopied] = useState(false);
   if (!url) return null;
@@ -101,7 +100,6 @@ export function ActivationLinkBox({ url }) {
   );
 }
 
-/* ---------- الحالات المشتركة (شاشة 6) ---------- */
 export function TableSkeleton({ rows = 4 }) {
   return (
     <div className="org-skel" aria-busy="true" aria-label="جاري التحميل">

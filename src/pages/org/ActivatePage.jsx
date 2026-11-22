@@ -4,14 +4,13 @@ import { Field, Notice, TextInput } from "../../components/org/ui";
 import { activateAccount } from "../../api.js";
 import { MESSAGES } from "../../constants/org";
 
-// شاشة تفعيل الحساب (جوال أولًا، 360px). الرابط: /activate?token=...
 export default function ActivatePage() {
   const [params] = useSearchParams();
   const token = params.get("token");
   const [pw, setPw] = useState({ password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [banner, setBanner] = useState("");
-  const [state, setState] = useState(token ? "form" : "invalid"); // form | done | invalid
+  const [state, setState] = useState(token ? "form" : "invalid");
   const [saving, setSaving] = useState(false);
 
   async function submit(ev) {

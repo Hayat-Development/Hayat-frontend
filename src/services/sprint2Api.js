@@ -1,11 +1,3 @@
-/*
- * ⚠️ طبقة وهمية (Mock) للسبرنت 2 — استبدل جسم كل دالة بـ apiRequest(...) من ../api.
- * الأخطاء المرمية بنفس شكل apiRequest: error.status و error.data.{code, errors, reason}.
- *
- * للمعاينة بدون باك:
- *   ?as=admin | rep | staff           الدور (يُحفظ في sessionStorage)
- *   ?scn=empty | network | org_suspended | account_suspended | pending
- */
 const wait = (ms = 450) => new Promise((r) => setTimeout(r, ms));
 const fail = (status, code, extra = {}) => {
   const e = new Error(code || "error");
@@ -34,9 +26,8 @@ const db = {
     { id: 22, name: "رنا سالم", email: "rana@amal.ps", phone: "+970594444444", role: "staff_bank", status: "suspended" },
   ],
 };
-const TAKEN = ["info@amal-bank.ps", "laila@amal.ps"]; // لتجربة 409
+const TAKEN = ["info@amal-bank.ps", "laila@amal.ps"];
 
-// GET /auth/me  (أو الموجود عندك getCurrentUser) — يجب أن يرجع الدور والمؤسسة
 export async function fetchSession() {
   await wait(300);
   const { as, scn } = mockCfg();
@@ -53,7 +44,6 @@ export async function fetchSession() {
   };
 }
 
-// GET /admin/banks
 export async function listBanks() {
   await wait();
   const { scn } = mockCfg();
@@ -61,7 +51,6 @@ export async function listBanks() {
   return scn === "empty" ? [] : db.banks.map((b) => ({ ...b }));
 }
 
-// GET /admin/banks/{id}
 export async function getBank(id) {
   await wait();
   if (mockCfg().scn === "network") throw fail(0);

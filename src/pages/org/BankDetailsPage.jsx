@@ -11,7 +11,7 @@ export default function BankDetailsPage() {
   const [bank, setBank] = useState(null);
   const [netErr, setNetErr] = useState(false);
   const [notice, setNotice] = useState(null);
-  const [confirm, setConfirm] = useState(null); // "suspended" | "active"
+  const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [block, handle] = useBlockingError();
 

@@ -13,12 +13,11 @@ export default function OrgShell({ title, actions, children }) {
   const suspended = s?.role !== ROLES.ADMIN && s?.bank?.status === "suspended";
 
   async function logout() {
-    try { await logoutUser(); } catch { /* نكمل الخروج محليًا */ }
+    try { await logoutUser(); } catch {}
     clearAuth();
     navigate("/login", { replace: true });
   }
 
-  // الممثل/الموظف: القسم يظهر بحسب الدور — والمنع الفعلي عند الباك والـ RoleRoute
   const links = s?.role === ROLES.ADMIN
     ? [{ to: "/admin/banks", icon: "ti-building-hospital", text: "بنوك الدم" }]
     : suspended ? [] : [

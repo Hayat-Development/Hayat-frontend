@@ -80,7 +80,7 @@ function App() {
 />
 <Route path="/activate" element={<ActivatePage />} />
 
-        {/* السبرنت 2 — الحماية الفعلية عند الباك، والـ RoleRoute لتجربة الواجهة */}
+        {/* مسارات السبرنت 2 */}
         <Route element={<RoleRoute allow={[ROLES.ADMIN]} />}>
           <Route path="/admin/banks" element={<BanksAdminPage />} />
           <Route path="/admin/banks/new" element={<BankFormPage />} />

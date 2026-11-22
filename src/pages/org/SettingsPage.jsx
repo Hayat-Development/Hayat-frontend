@@ -1,6 +1,5 @@
 import OrgShell from "../../components/org/OrgShell";
 
-// صفحة فاضية مؤقتة — الإعدادات خارج نطاق السبرنت 2.
 export default function SettingsPage() {
   return (
     <OrgShell title="الإعدادات">

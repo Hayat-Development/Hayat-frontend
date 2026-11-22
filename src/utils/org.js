@@ -4,13 +4,12 @@ export const normalizeEmail = (v = "") => v.trim().toLowerCase();
 export function normalizePhone(v = "") {
   let p = v.replace(/[\s\-()]/g, "");
   if (p.startsWith("00")) p = "+" + p.slice(2);
-  else if (p.startsWith("0")) p = "+970" + p.slice(1); // افتراض محلي، الباك هو المرجع
+  else if (p.startsWith("0")) p = "+970" + p.slice(1);
   return p;
 }
 export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 export const isPhone = (v) => /^\+\d{8,15}$/.test(v);
 
-// يحوّل أي خطأ من apiRequest إلى نوع شاشة/سلوك موحّد.
 export function classifyError(err) {
   const code = canonicalCode(err?.data?.code);
   const s = err?.status;
@@ -31,7 +30,6 @@ export function clearAuth() {
   sessionStorage.removeItem("hayat_challenge_id");
 }
 
-// يحوّل errors القادمة من 422 إلى { fieldName: "الرسالة" } حسب خريطة الحقول.
 export function mapFieldErrors(err, keyMap = {}) {
   const out = {};
   Object.entries(err?.data?.errors || {}).forEach(([k, v]) => {

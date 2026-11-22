@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { StatusChip } from "../../components/org/ui";
 import { useSession } from "../../context/SessionContext";
 
-// نفس اللوحة للممثل والموظف؛ قسم إدارة الموظفين يظهر في OrgShell للممثل فقط.
 export default function OrgDashboardPage() {
   const session = useSession() || {};
   const { bank, name, role } = session;

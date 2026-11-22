@@ -17,7 +17,7 @@ export default function StaffPage() {
   const [netErr, setNetErr] = useState(false);
   const [notice, setNotice] = useState(null);
   const [linkUrl, setLinkUrl] = useState("");
-  const [confirm, setConfirm] = useState(null); // { member, action }
+  const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [block, handle] = useBlockingError();
@@ -107,7 +107,6 @@ export default function StaffPage() {
   );
 }
 
-// لا يوجد حقل role ولا blood_bank_id — الباك يحددهما من حساب الممثل.
 function StaffFormDialog({ onClose, onCreated, handle }) {
   const [f, setF] = useState({ name: "", email: "", phone: "" });
   const [errors, setErrors] = useState({});

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { fetchSession } from "../../services/sprint2Api"; // TODO: استبدلها بـ getCurrentUser (/auth/me)
+import { fetchSession } from "../../services/sprint2Api";
 import { SessionContext } from "../../context/SessionContext";
 import { roleHome } from "../../constants/org";
 import { classifyError, clearAuth } from "../../utils/org";
 import { ErrorScreen, TableSkeleton } from "./ui";
 
-// Route Guard: يجلب الدور والمؤسسة من /auth/me عند كل تحميل مع شاشة تحميل (بلا وميض).
 export default function RoleRoute({ allow }) {
   const navigate = useNavigate();
   const [state, setState] = useState({ status: "loading" });

@@ -12,8 +12,6 @@ function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // جولة تجريبية: المتبرع يعبّي الحقول (دخول حقيقي)، والبقية تفتح لوحتها بالبيانات الوهمية للسبرنت 2.
-  // TODO عند ربط الباك: احذف enterDemo واجعل الأزرار تعبّي حسابات تجريبية حقيقية.
   const DEMO_PASSWORD = "Demo12345!";
   function fillDonor() { setIdentifier("ahmad@hayat.demo"); setPassword(DEMO_PASSWORD); setError(""); }
   function enterDemo(key, role) {
@@ -42,8 +40,6 @@ async function handleSubmit(event) {
     const result = await loginUser(identifier, password);
 
     const user = result.data.user;
-
-    // التوجيه حسب الدور (المتبرع → /dashboard، مدير النظام → /admin/banks، ممثل/موظف → /org)
     navigate(roleHome(user.role), { replace: true });
 
   } catch (error) {
