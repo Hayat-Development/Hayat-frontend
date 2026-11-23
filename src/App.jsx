@@ -48,6 +48,7 @@ function PageTitle() {
       "/admin/banks": "إدارة بنوك الدم",
       "/admin/banks/new": "إضافة بنك دم",
       "/org": "لوحة المؤسسة",
+      "/org/profile": "الملف المؤسسي",
       "/org/staff": "إدارة الموظفين",
       "/settings": "الإعدادات",
     };
@@ -87,8 +88,9 @@ function App() {
         </Route>
         <Route element={<RoleRoute allow={[ROLES.REP, ROLES.STAFF]} />}>
           <Route path="/org" element={<OrgDashboardPage />} />
+          <Route path="/org/profile" element={<OrgDashboardPage profile />} />
           <Route path="/institution/dashboard" element={<Navigate to="/org" replace />} />
-          <Route path="/institution/profile" element={<Navigate to="/org" replace />} />
+          <Route path="/institution/profile" element={<Navigate to="/org/profile" replace />} />
         </Route>
         <Route element={<RoleRoute allow={[ROLES.ADMIN, ROLES.REP, ROLES.STAFF]} />}>
           <Route path="/settings" element={<SettingsPage />} />

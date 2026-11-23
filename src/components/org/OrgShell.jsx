@@ -4,24 +4,23 @@ import { useSession } from "../../context/SessionContext";
 import { ROLES, normalizeRole } from "../../constants/org";
 import { clearAuth } from "../../utils/org";
 import { logoutUser } from "../../api";
-import { showFlashMessage } from "../../flashMessage";
+import { ActionDialog } from "./StatusDialog";
 import { ErrorScreen } from "./ui";
 
 export default function OrgShell({ title, actions, children }) {
   const s = useSession() || {};
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const userRole = normalizeRole(s?.role);
   const suspended = userRole !== ROLES.ADMIN && s?.bank?.status === "suspended";
 
   async function logout() {
     try { await logoutUser(); } catch {
       // The browser session can still be cleared if the server is unavailable.
-    } finally {
-      clearAuth();
-      showFlashMessage("تم تسجيل الخروج بنجاح.");
-      navigate("/login", { replace: true });
     }
+    clearAuth();
+    return { message: "تم تسجيل الخروج بنجاح." };
   }
 
   const links = userRole === ROLES.ADMIN
@@ -32,6 +31,7 @@ export default function OrgShell({ title, actions, children }) {
       ]
     : suspended ? [] : [
         { to: "/org", icon: "ti-layout-dashboard", text: "اللوحة", end: true },
+        { to: "/org/profile", icon: "ti-building-hospital", text: "الملف المؤسسي" },
         { soon: true, icon: "ti-droplet", text: "الطلبات" },
         ...(userRole === ROLES.REP ? [
           { to: "/org/staff", icon: "ti-users", text: "إدارة الموظفين", end: true },
@@ -55,7 +55,7 @@ export default function OrgShell({ title, actions, children }) {
             ? <span key={l.text} className="org-nav-item is-soon" aria-disabled="true"><i className={`ti ${l.icon}`} />{l.text}<small>قريبًا</small></span>
             : <NavLink key={l.to} to={l.to} end={l.end} className="org-nav-item" onClick={() => setOpen(false)}><i className={`ti ${l.icon}`} />{l.text}</NavLink>)}
         </nav>
-        <button type="button" className="org-nav-item org-logout" onClick={logout}><i className="ti ti-logout" />خروج</button>
+        <button type="button" className="org-nav-item org-logout" onClick={() => setConfirmingLogout(true)}><i className="ti ti-logout" />خروج</button>
       </aside>
       <main className="org-main" id="main-content">
         {suspended
@@ -65,6 +65,11 @@ export default function OrgShell({ title, actions, children }) {
               {children}
             </>}
       </main>
+      {confirmingLogout && (
+        <ActionDialog title="تسجيل الخروج" text="هل تريد تسجيل الخروج من منصة حياة؟"
+          confirmText="تأكيد تسجيل الخروج" save={logout}
+          onDone={() => navigate("/login", { replace: true })} onCancel={() => setConfirmingLogout(false)} />
+      )}
     </div>
   );
 }

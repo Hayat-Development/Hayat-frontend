@@ -7,6 +7,7 @@ import {
   getApiErrorMessages,
 } from "../../api";
 import { showFlashMessage } from "../../flashMessage";
+import { clearAuth } from "../../utils/org";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -62,27 +63,12 @@ export default function DashboardPage() {
 
     try {
       await logoutUser();
-
-      localStorage.removeItem("hayat_token");
-      localStorage.removeItem("hayat_user");
-      sessionStorage.removeItem("hayat_challenge_id");
-
-      showFlashMessage("تم تسجيل الخروج بنجاح.");
-      navigate("/login", { replace: true });
-    } catch (err) {
-      if (err.status === 401) {
-        localStorage.removeItem("hayat_token");
-        localStorage.removeItem("hayat_user");
-        sessionStorage.removeItem("hayat_challenge_id");
-
-        navigate("/login", { replace: true });
-      } else {
-        setError(getApiErrorMessages(err).join(" - "));
-        setShowLogoutModal(false);
-      }
-    } finally {
-      setLoggingOut(false);
+    } catch {
+      // The browser session can still be cleared if the server is unavailable.
     }
+    clearAuth();
+    showFlashMessage("تم تسجيل الخروج بنجاح.");
+    navigate("/login", { replace: true });
   }
 
   if (loading) {
