@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, getApiErrorMessages } from "../../api";
-import { MESSAGES, ROLES, canonicalCode, roleHome } from "../../constants/org";
+import { MESSAGES, canonicalCode, roleHome } from "../../constants/org";
 
 function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -12,17 +12,7 @@ function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const DEMO_PASSWORD = "Demo12345!";
-  function fillDonor() { setIdentifier("ahmad@hayat.demo"); setPassword(DEMO_PASSWORD); setError(""); }
-  function enterDemo(key, role) {
-    sessionStorage.setItem("mock_as", key);
-    sessionStorage.removeItem("mock_scn");
-    navigate(roleHome(role));
-  }
-
-
-  
-async function handleSubmit(event) {
+  async function handleSubmit(event) {
   event.preventDefault();
 
   if (loading) return;
@@ -61,7 +51,6 @@ async function handleSubmit(event) {
     }
 
     const code = canonicalCode(error.data?.code);
-    if (code === "ACCOUNT_PENDING") { navigate("/activate"); return; }
     if (MESSAGES[code] && ["ACCOUNT_SUSPENDED", "ORG_SUSPENDED", "INVALID_CREDENTIALS"].includes(code)) {
       setError(code === "ORG_SUSPENDED" && error.data?.reason ? `${MESSAGES[code]} السبب: ${error.data.reason}` : MESSAGES[code]);
       return;
@@ -200,15 +189,6 @@ async function handleSubmit(event) {
                         <a href="/register">أنشئ حساب متبرع</a>
                       </div>
 
-                      <div className="demo-tour">
-                        <strong>خذ جولة في حياة</strong>
-                        <div className="demo-tour-grid">
-                          <button type="button" onClick={fillDonor}><i className="ti ti-heart-handshake" aria-hidden="true"></i>متبرع</button>
-                          <button type="button" onClick={() => enterDemo("rep", ROLES.REP)}><i className="ti ti-building-hospital" aria-hidden="true"></i>ممثل المؤسسة</button>
-                          <button type="button" onClick={() => enterDemo("staff", ROLES.STAFF)}><i className="ti ti-users" aria-hidden="true"></i>موظف بنك دم</button>
-                          <button type="button" onClick={() => enterDemo("admin", ROLES.ADMIN)}><i className="ti ti-shield-check" aria-hidden="true"></i>مدير النظام</button>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>

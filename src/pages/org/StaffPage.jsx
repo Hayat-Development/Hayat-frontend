@@ -1,153 +1,143 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import OrgShell from "../../components/org/OrgShell";
-import { ActivationLinkBox, ConfirmDialog, EmptyState, ErrorScreen, Field, Notice, Pagination, StatusChip, TableSkeleton, TextInput } from "../../components/org/ui";
+import { AccountFields } from "../../components/org/AccountFields";
+import StatusDialog from "../../components/org/StatusDialog";
+import { EmptyState, ErrorScreen, Notice, Pagination, StatusChip, TableSkeleton } from "../../components/org/ui";
 import { useSession } from "../../context/SessionContext";
-import useBlockingError from "../../hooks/useBlockingError";
 import useDebounce from "../../hooks/useDebounce";
-import { createStaff, listStaff, reactivateStaff, resendActivation, suspendStaff } from "../../services/sprint2Api";
-import { MESSAGES, SUCCESS, normalizeRole } from "../../constants/org";
-import { isEmail, isPhone, normalizeEmail, normalizePhone } from "../../utils/org";
+import useOrgRequest from "../../hooks/useOrgRequest";
+import { createStaff, listStaff, listUsers, setStaffStatus, setUserStatus } from "../../services/orgApi";
+import { SUCCESS, normalizeRole } from "../../constants/org";
+import { getApiErrorMessages } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
+import { accountPayload, classifyError, emptyAccount, mapFieldErrors } from "../../utils/org";
 
-export default function StaffPage() {
-  const me = useSession();
+const roleNames = {
+  donor: "متبرع",
+  rep_bank: "ممثل مؤسسة",
+  staff_bank: "موظف مؤسسة",
+  organization_representative: "ممثل مؤسسة",
+};
+
+export default function StaffPage({ administration = false }) {
+  const session = useSession();
   const [search, setSearch] = useState("");
-  const q = useDebounce(search);
-  const [page, setPage] = useState(1);
-  const [res, setRes] = useState(null);
-  const [netErr, setNetErr] = useState(false);
-  const [notice, setNotice] = useState(null);
-  const [linkUrl, setLinkUrl] = useState("");
-  const [confirm, setConfirm] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [pageSelection, setPageSelection] = useState({ search: "", page: 1 });
+  const [selected, setSelected] = useState(null);
   const [adding, setAdding] = useState(false);
-  const [block, handle] = useBlockingError();
+  const query = useDebounce(search.trim());
+  const page = pageSelection.search === query ? pageSelection.page : 1;
 
-  useEffect(() => setPage(1), [q]);
-  const load = useCallback(() => {
-    setNetErr(false);
-    listStaff({ search: q, page }).then(setRes).catch((e) => { if (!handle(e)) setNetErr(true); });
-  }, [q, page, handle]);
-  useEffect(() => { load(); }, [load]);
-
-  const fail = (e) => {
-    if (handle(e)) return;
-    const c = e?.data?.code;
-    setNotice({ type: "error", text: c?.includes("SUSPEND") || c?.includes("LAST") ? MESSAGES.SELF_SUSPEND : e.status ? MESSAGES.ROLE_FORBIDDEN : MESSAGES.NETWORK });
-  };
-
-  async function runConfirm() {
-    const { member, action } = confirm; setBusy(true);
-    try {
-      await (action === "suspend" ? suspendStaff(member.id) : reactivateStaff(member.id));
-      setNotice({ type: "success", text: action === "suspend" ? SUCCESS.staffSuspended : SUCCESS.staffReactivated });
-      setConfirm(null); load();
-    } catch (e) { setConfirm(null); fail(e); } finally { setBusy(false); }
-  }
-  async function resend(m) {
-    try { const r = await resendActivation(m.id); setLinkUrl(r.activation_url); setNotice({ type: "success", text: SUCCESS.linkResent }); } catch (e) { fail(e); }
-  }
-
-  if (block && ["org_suspended", "account_suspended"].includes(block.kind)) return <ErrorScreen full kind={block.kind} reason={block.reason} backTo="/login" backText="العودة لتسجيل الدخول" />;
-  if (block) return <OrgShell title="إدارة الموظفين"><ErrorScreen kind={block.kind} backTo="/org" /></OrgShell>;
-  const rows = res?.data;
-  const addBtn = <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}><i className="ti ti-plus" />إضافة موظف</button>;
+  const list = administration ? listUsers : listStaff;
+  const saveStatus = administration ? setUserStatus : setStaffStatus;
+  const request = useCallback((signal) => list({ search: query, page, signal, suspended: false }), [list, query, page]);
+  const { data, error, loading, reload } = useOrgRequest(request);
+  const searchLabel = administration ? "بحث بالاسم أو البريد أو الهاتف" : "بحث بالاسم أو البريد";
+  const title = administration ? "المستخدمون" : `فريق ${session?.bank?.name || "المؤسسة"}`;
+  const add = () => setAdding(true);
+  const addButton = !administration && <button type="button" className="btn btn-primary" onClick={add}>
+    <i className="ti ti-plus" />إضافة موظف
+  </button>;
 
   return (
-    <OrgShell title={`فريق ${me?.bank?.name || "المؤسسة"}`} actions={addBtn}>
-      <Notice type={notice?.type} onClose={() => setNotice(null)}>{notice?.text}</Notice>
-      {linkUrl && <div className="org-card org-pad mb-3"><ActivationLinkBox url={linkUrl} /></div>}
+    <OrgShell title={title} actions={addButton}>
       <div className="org-search">
         <i className="ti ti-search" aria-hidden="true" />
-        <input type="search" className="form-control" placeholder="بحث بالاسم" aria-label="بحث بالاسم" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input type="search" className="form-control" placeholder={searchLabel} aria-label={searchLabel}
+          value={search} onChange={(event) => setSearch(event.target.value)} />
       </div>
-      <section className="org-card">
-        {netErr ? <ErrorScreen kind="network" onRetry={load} />
-          : !rows ? <TableSkeleton />
-          : rows.length === 0 ? (q
-              ? <EmptyState title="لا نتائج مطابقة" text="جرّب اسمًا آخر." />
-              : <EmptyState title="لا يوجد موظفون بعد" text="أضف أول موظف لمؤسستك." actionText="إضافة موظف" onAction={() => setAdding(true)} />)
-          : (
-            <>
+      <section className="org-card org-card-table">
+        {loading ? <TableSkeleton />
+          : error ? <ErrorScreen kind={classifyError(error)} onRetry={reload} />
+          : !data.data.length ? <EmptyState
+              title={query ? "لا نتائج مطابقة" : administration ? "لا يوجد مستخدمون بعد" : "لا يوجد موظفون بعد"}
+              actionText={!administration && !query ? "إضافة موظف" : undefined} onAction={add} />
+          : <>
               <table className="org-table">
-                <thead><tr><th>الاسم</th><th>البريد</th><th>الحالة</th><th>الإجراء</th></tr></thead>
+                <thead><tr><th>الاسم</th><th>البريد</th>{administration && <th>الدور</th>}<th>الحالة</th><th>الإجراء</th></tr></thead>
                 <tbody>
-                  {rows.map((m) => {
-                    const isRep = normalizeRole(m.role) === "rep_bank";
-                    return (
-                      <tr key={m.id}>
-                        <td data-label="الاسم"><strong>{m.name}</strong>{isRep && <span className="org-tag">{m.id === me.id ? "أنت · الممثل الرسمي" : "الممثل الرسمي"}</span>}</td>
-                        <td data-label="البريد" dir="ltr" className="org-ltr">{m.email}</td>
-                        <td data-label="الحالة"><StatusChip status={m.status} /></td>
-                        <td data-label="الإجراء" className="org-actions">
-                          {!isRep && m.status === "active" && <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirm({ member: m, action: "suspend" })}>إيقاف</button>}
-                          {!isRep && m.status === "pending" && <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => resend(m)}>إعادة إرسال الرابط</button>}
-                          {!isRep && m.status === "suspended" && <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setConfirm({ member: m, action: "reactivate" })}>إعادة تفعيل</button>}
-                          {isRep && <span className="org-sub">—</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {data.data.map((member) => (
+                    <tr key={member.id}>
+                      <td data-label="الاسم"><strong>{member.name}</strong></td>
+                      <td data-label="البريد"><span dir="ltr" className="org-ltr">{member.email}</span></td>
+                      {administration && <td data-label="الدور">{roleNames[normalizeRole(member.role)] || member.role}</td>}
+                      <td data-label="الحالة">
+                        <div className="org-cell">
+                          <StatusChip status={member.status} />
+                        </div>
+                      </td>
+                      <td data-label="الإجراء">
+                        <button type="button" className="btn btn-outline-danger btn-sm"
+                          onClick={() => setSelected(member)}>إيقاف</button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
-              <Pagination meta={res.meta} onPage={setPage} />
-            </>
-          )}
+              <Pagination meta={data.meta} onPage={(nextPage) => setPageSelection({ search: query, page: nextPage })} />
+            </>}
       </section>
-
-      {confirm && (
-        <ConfirmDialog busy={busy} danger={confirm.action === "suspend"}
-          title={confirm.action === "suspend" ? `إيقاف ${confirm.member.name}؟` : `إعادة تفعيل ${confirm.member.name}؟`}
-          text={confirm.action === "suspend" ? "لن يستطيع استخدام لوحة المؤسسة حتى تعيد تفعيله." : "سيعود لاستخدام حسابه إن كان قد أكمل التفعيل، وإلا يعود بانتظار التفعيل."}
-          confirmText={confirm.action === "suspend" ? "تأكيد الإيقاف" : "تأكيد إعادة التفعيل"}
-          onConfirm={runConfirm} onCancel={() => setConfirm(null)} />
-      )}
-      {adding && <StaffFormDialog onClose={() => setAdding(false)} handle={handle}
-        onCreated={(url) => { setAdding(false); setLinkUrl(url); setNotice({ type: "success", text: SUCCESS.staffAdded }); load(); }} />}
+      {selected && <StatusDialog title={`إيقاف ${selected.name}؟`}
+        text="سيُمنع تسجيل الدخول إلى هذا الحساب حتى إعادة تفعيله."
+        status="suspended" save={(status, reason) => saveStatus(selected.id, status, reason)}
+        success={administration ? "تم إيقاف المستخدم." : SUCCESS.staffSuspended}
+        onCancel={() => setSelected(null)} onDone={() => {
+          setSelected(null);
+          if (page > 1 && data?.data.length === 1) setPageSelection({ search: query, page: page - 1 });
+          else reload();
+        }} />}
+      {adding && <StaffFormDialog onClose={() => setAdding(false)}
+        onCreated={() => { setAdding(false); setPageSelection({ search: query, page: 1 }); reload(); }} />}
     </OrgShell>
   );
 }
 
-function StaffFormDialog({ onClose, onCreated, handle }) {
-  const [f, setF] = useState({ name: "", email: "", phone: "" });
+function StaffFormDialog({ onClose, onCreated }) {
+  const [fields, setFields] = useState(emptyAccount);
   const [errors, setErrors] = useState({});
   const [banner, setBanner] = useState("");
   const [saving, setSaving] = useState(false);
-  const lock = useRef(false);
-  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setErrors({ ...errors, [k]: undefined }); };
+  const submitting = useRef(false);
 
-  async function submit(ev) {
-    ev.preventDefault();
-    if (saving || lock.current) return;
-    const e = {};
-    if (!f.name.trim()) e.name = "هذا الحقل مطلوب.";
-    if (!isEmail(normalizeEmail(f.email))) e.email = f.email.trim() ? "صيغة البريد غير صحيحة." : "هذا الحقل مطلوب.";
-    if (!isPhone(normalizePhone(f.phone))) e.phone = f.phone.trim() ? "أدخل الهاتف مع رمز الدولة." : "هذا الحقل مطلوب.";
-    setErrors(e); setBanner("");
-    if (Object.keys(e).length) { setBanner(MESSAGES.VALIDATION); return; }
-    lock.current = true;
+  function update(name, value) {
+    setFields((current) => ({ ...current, [name]: value }));
+    setErrors((current) => ({ ...current, [name]: "" }));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setSaving(true);
+    setErrors({});
+    setBanner("");
+
     try {
-      const r = await createStaff({ name: f.name.trim(), email: normalizeEmail(f.email), phone: normalizePhone(f.phone) });
-      onCreated(r.activation_url);
-    } catch (err) {
-      if (handle(err)) return onClose();
-      if (err.status === 409) setErrors(String(err.data?.code).includes("PHONE") ? { phone: MESSAGES.PHONE_TAKEN } : { email: MESSAGES.EMAIL_TAKEN });
-      else if (err.status === 422) { const m = {}; Object.entries(err.data?.errors || {}).forEach(([k, v]) => (m[k] = [].concat(v)[0])); setErrors(m); setBanner(MESSAGES.VALIDATION); }
-      else setBanner(err.status ? "تعذّر الحفظ ولم يُنشأ أي سجل." : MESSAGES.NETWORK);
-    } finally { lock.current = false; setSaving(false); }
+      const result = await createStaff(accountPayload(fields));
+      showFlashMessage(result.message || SUCCESS.staffAdded);
+      onCreated();
+    } catch (error) {
+      const validationErrors = mapFieldErrors(error);
+      setErrors(validationErrors);
+      if (!Object.keys(validationErrors).length) setBanner(getApiErrorMessages(error).join(" "));
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   }
 
   return (
-    <div className="org-overlay" role="presentation">
-      <form className="org-modal org-modal-form" role="dialog" aria-modal="true" aria-labelledby="sf-t" onSubmit={submit} noValidate>
-        <h2 id="sf-t">إضافة موظف</h2>
+    <div className="org-overlay" onKeyDown={(event) => { if (event.key === "Escape" && !saving) onClose(); }}>
+      <form className="org-modal org-modal-form" role="dialog" aria-modal="true"
+        aria-labelledby="staff-form-title" onSubmit={submit} noValidate>
+        <h2 id="staff-form-title">إضافة موظف</h2>
         <Notice type="error">{banner}</Notice>
-        <Field id="s_name" label="الاسم" required error={errors.name}><TextInput id="s_name" value={f.name} onChange={set("name")} error={errors.name} disabled={saving} autoFocus /></Field>
-        <Field id="s_email" label="البريد" required error={errors.email}><TextInput id="s_email" ltr value={f.email} onChange={set("email")} error={errors.email} disabled={saving} placeholder="name@example.com" /></Field>
-        <Field id="s_phone" label="الهاتف" required error={errors.phone} hint="مع رمز الدولة"><TextInput id="s_phone" ltr type="tel" value={f.phone} onChange={set("phone")} error={errors.phone} disabled={saving} placeholder="+970 59 000 0000" /></Field>
+        <fieldset disabled={saving}>
+          <AccountFields prefix="staff" values={fields} errors={errors} onChange={update} autoFocus />
+        </fieldset>
         <div className="org-modal-actions">
           <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={saving}>إلغاء</button>
-          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "جاري الحفظ..." : "حفظ الحساب"}</button>
+          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "جاري الحفظ…" : "حفظ الحساب"}</button>
         </div>
       </form>
     </div>

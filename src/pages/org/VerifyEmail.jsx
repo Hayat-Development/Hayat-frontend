@@ -1,100 +1,92 @@
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  verifyEmail,
-  resendVerificationCode,
-  getApiErrorMessages,
-} from "../../api";
-
+import { verifyEmail, resendVerificationCode, updateVerificationEmail, getApiErrorMessages } from "../../api";
+import { Field, Notice, TextInput } from "../../components/org/ui";
+import { showFlashMessage } from "../../flashMessage";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
-
+  const redirect = useRef(null);
   const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
+  const [editingEmail, setEditingEmail] = useState(false);
   const [error, setError] = useState("");
-  const [resending, setResending] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [operation, setOperation] = useState(null);
   const [cooldown, setCooldown] = useState(0);
 
+  useEffect(() => () => clearTimeout(redirect.current), []);
   useEffect(() => {
-  if (cooldown <= 0) return;
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((seconds) => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
-  const timer = setTimeout(() => {
-    setCooldown((previous) => Math.max(0, previous - 1));
-  }, 1000);
-
-  return () => clearTimeout(timer);
-}, [cooldown]);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    if (loading) return;
-
-    if (!/^[0-9]{6}$/.test(code)) {
-      setError("رمز التحقق يجب أن يتكون من 6 أرقام.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (operation) return;
     setError("");
-
+    setCodeError("");
+    setOperation("verify");
     try {
       const result = await verifyEmail(code);
-
-      setMessage(result.message || "تم تأكيد البريد الإلكتروني بنجاح.");
-
       sessionStorage.removeItem("hayat_challenge_id");
-
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 2000);
-    } catch (err) {
-      setError(getApiErrorMessages(err).join(" - "));
-    } finally {
-      setLoading(false);
+      showFlashMessage(result.message || "تم تأكيد البريد الإلكتروني بنجاح.", 2000);
+      redirect.current = setTimeout(() => navigate("/login", { replace: true }), 2100);
+    } catch (requestError) {
+      const messages = requestError.data?.errors?.code;
+      if (messages) setCodeError([].concat(messages).join(" "));
+      else setError(getApiErrorMessages(requestError).join(" "));
+      setOperation(null);
     }
   }
 
   async function handleResend() {
-  if (resending || loading || cooldown > 0) return;
-
-  setResending(true);
-  setMessage("");
-  setError("");
-
-  try {
-    const result = await resendVerificationCode();
-
-    if (result.data?.challenge_id) {
-      sessionStorage.setItem(
-        "hayat_challenge_id",
-        result.data.challenge_id
-      );
-    }
-
-    setMessage(
-      (result.message || "تم إرسال رمز تحقق جديد.") +
-      " يرجى فحص البريد الوارد ومجلد الرسائل غير المرغوب فيها (Spam)."
-    );
-
-    setCode("");
-    setCooldown(60);
-  } catch (err) {
-    if (err.status === 429) {
-      setError("تم تجاوز الحد المسموح لإعادة الإرسال. يرجى الانتظار قبل المحاولة مجددًا.");
+    if (operation || cooldown > 0) return;
+    setError("");
+    setOperation("resend");
+    try {
+      const result = await resendVerificationCode();
+      showFlashMessage(result.message || "تم إرسال رمز تحقق جديد.");
+      setCode("");
+      setCodeError("");
       setCooldown(60);
-    } else {
-      setError(getApiErrorMessages(err).join(" - "));
+    } catch (requestError) {
+      setError(getApiErrorMessages(requestError).join(" "));
+      if (requestError.status === 429) setCooldown(60);
+    } finally {
+      setOperation(null);
     }
-  } finally {
-    setResending(false);
   }
-}
+
+  async function handleEmailUpdate(event) {
+    event.preventDefault();
+    if (operation || cooldown > 0) return;
+    setError("");
+    setEmailError("");
+    setOperation("email");
+    try {
+      const result = await updateVerificationEmail(email);
+      setMaskedEmail(result.data.email);
+      setEditingEmail(false);
+      setEmail("");
+      setCode("");
+      setCodeError("");
+      setCooldown(60);
+      showFlashMessage(result.message || "تم تعديل البريد وإرسال رمز تحقق جديد.");
+    } catch (requestError) {
+      const messages = requestError.data?.errors?.email;
+      if (messages) setEmailError([].concat(messages).join(" "));
+      else if (requestError.status === 429) {
+        setCooldown(requestError.retryAfter || 60);
+        setError("انتظر قليلًا قبل إعادة محاولة تعديل البريد.");
+      } else setError(getApiErrorMessages(requestError).join(" "));
+    } finally {
+      setOperation(null);
+    }
+  }
 
   return (
     <main id="main-content" dir="rtl">
@@ -120,73 +112,47 @@ export default function VerifyEmail() {
                       <i className="ti ti-mail-check" aria-hidden="true"></i>
                     </div>
 
-                    {message && (
-                      <div className="alert alert-success" role="status">
-                        {message}
-                      </div>
+                    {maskedEmail && <p className="text-center" dir="ltr">{maskedEmail}</p>}
+                    <Notice type="error">{error}</Notice>
+
+                    {editingEmail ? (
+                      <form onSubmit={handleEmailUpdate} noValidate>
+                        <Field id="verification-email" label="البريد الإلكتروني الجديد" required error={emailError}>
+                          <TextInput id="verification-email" type="email" autoComplete="email" ltr required
+                            value={email} error={emailError} disabled={Boolean(operation)} autoFocus
+                            onChange={(event) => { setEmail(event.target.value); setEmailError(""); }} />
+                        </Field>
+                        <button type="submit" className="btn btn-primary w-100" disabled={Boolean(operation) || cooldown > 0}>
+                          {operation === "email" ? "جاري تعديل البريد…" : cooldown > 0 ? `المحاولة بعد ${cooldown} ثانية` : "حفظ البريد وإرسال رمز جديد"}
+                        </button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleSubmit} noValidate>
+                        <Field id="code" label="رمز التحقق" required error={codeError}>
+                          <input id="code" name="code" type="text" inputMode="numeric" dir="ltr"
+                            className={`form-control otp-input${codeError ? " is-invalid" : ""}`}
+                            aria-invalid={Boolean(codeError)} aria-describedby={codeError ? "code-err" : undefined}
+                            maxLength={6} placeholder="000000" autoComplete="one-time-code" required
+                            disabled={Boolean(operation)} value={code}
+                            onChange={(event) => { setCode(event.target.value); setCodeError(""); }} />
+                        </Field>
+                        <button className="btn btn-primary w-100" type="submit" disabled={Boolean(operation)}>
+                          {operation === "verify" ? "جاري التحقق…" : "تأكيد الحساب"}
+                        </button>
+                      </form>
                     )}
 
-                    {error && (
-                      <div className="alert alert-danger" role="alert">
-                        {error}
-                      </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} noValidate>
-                      <div className="mb-3" style={{ textAlign: "right" }}>
-                        <label className="form-label" htmlFor="code">
-                          رمز التحقق
-                        </label>
-
-                        <input
-                          className="form-control otp-input"
-                          id="code"
-                          name="code"
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]{6}"
-                          maxLength={6}
-                          placeholder="000000"
-                          autoComplete="one-time-code"
-                          value={code}
-                          onChange={(e) =>
-                            setCode(
-                              e.target.value.replace(/\D/g, "").slice(0, 6)
-                            )
-                          }
-                          required
-                        />
-                      </div>
-
-                      <button
-                        className="btn btn-primary w-100"
-                        type="submit"
-                        disabled={loading}
-                      >
-                        {loading ? "جاري التحقق..." : "تأكيد الحساب"}
-                      </button>
-                    </form>
-
-                    <div className="auth-footer">
-
-                          <div className="d-flex justify-content-center mt-3">
-  <button
-    type="button"
-    className="btn btn-outline-secondary"
-    onClick={handleResend}
-    disabled={resending || loading || cooldown > 0}
-  >
-    {resending
-      ? "جاري إعادة الإرسال..."
-      : cooldown > 0
-      ? `إعادة الإرسال بعد ${cooldown} ثانية`
-      : "إعادة إرسال الرمز"}
-  </button>
-</div>
-
-                      <Link to="/login">
-                        العودة إلى تسجيل الدخول
-                      </Link>
+                    <div className="auth-footer d-flex flex-column align-items-center gap-2">
+                      {!editingEmail && <button type="button" className="btn btn-outline-secondary" onClick={handleResend}
+                        disabled={Boolean(operation) || cooldown > 0}>
+                        {operation === "resend" ? "جاري إعادة الإرسال…" : cooldown > 0 ? `إعادة الإرسال بعد ${cooldown} ثانية` : "إعادة إرسال الرمز"}
+                      </button>}
+                      <button type="button" className="btn btn-link" disabled={Boolean(operation)} onClick={() => {
+                        setEditingEmail(!editingEmail);
+                        setEmailError("");
+                        setError("");
+                      }}>{editingEmail ? "العودة إلى رمز التحقق" : "أدخلت بريدًا خاطئًا؟ تعديل البريد"}</button>
+                      <Link to="/login">العودة إلى تسجيل الدخول</Link>
                     </div>
 
                   </div>

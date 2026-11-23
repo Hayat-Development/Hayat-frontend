@@ -1,20 +1,10 @@
 import { canonicalCode } from "../constants/org";
 
-export const normalizeEmail = (v = "") => v.trim().toLowerCase();
-export function normalizePhone(v = "") {
-  let p = v.replace(/[\s\-()]/g, "");
-  if (p.startsWith("00")) p = "+" + p.slice(2);
-  else if (p.startsWith("0")) p = "+970" + p.slice(1);
-  return p;
-}
-export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-export const isPhone = (v) => /^\+\d{8,15}$/.test(v);
-
 export function classifyError(err) {
   const code = canonicalCode(err?.data?.code);
   const s = err?.status;
   if (!s) return "network";
-  if (code === "ACCOUNT_PENDING") return "pending";
+  if (code === "ACCOUNT_PENDING" || code === "ACCOUNT_INACTIVE") return "pending";
   if (code === "ACCOUNT_SUSPENDED") return "account_suspended";
   if (code === "ORG_SUSPENDED") return "org_suspended";
   if (s === 401) return "unauthorized";
@@ -25,6 +15,16 @@ export function classifyError(err) {
   return "other";
 }
 
+export const emptyAccount = {
+  name: "", email: "", phone: "", national_id: "", password: "", password_confirmation: "",
+};
+
+export function accountPayload(values) {
+  const phone = values.phone.trim().replace(/[\s()-]/g, "")
+    .replace(/^(?:\+|00)(?:970|972)(?=[1-9])/, "0");
+  return { ...values, name: values.name.trim(), email: values.email.trim(), phone, national_id: values.national_id.trim() };
+}
+
 export function clearAuth() {
   ["hayat_token", "hayat_user"].forEach((k) => localStorage.removeItem(k));
   sessionStorage.removeItem("hayat_challenge_id");
@@ -33,7 +33,7 @@ export function clearAuth() {
 export function mapFieldErrors(err, keyMap = {}) {
   const out = {};
   Object.entries(err?.data?.errors || {}).forEach(([k, v]) => {
-    out[keyMap[k] || k] = [].concat(v)[0];
+    out[keyMap[k] || k] = [].concat(v).join(" ");
   });
   return out;
 }

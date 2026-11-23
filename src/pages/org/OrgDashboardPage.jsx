@@ -15,9 +15,8 @@ export default function OrgDashboardPage() {
       <section className="org-card org-pad">
         <h2 className="org-h2">بيانات المؤسسة</h2>
         <dl className="org-dl">
-          <div><dt>الهاتف</dt><dd dir="ltr" className="org-ltr">{bank?.phone || "—"}</dd></div>
-          <div><dt>البريد</dt><dd dir="ltr" className="org-ltr">{bank?.email || "—"}</dd></div>
-          <div><dt>المنطقة</dt><dd>{bank?.region || "—"}</dd></div>
+          <div><dt>اسم المؤسسة</dt><dd>{bank?.name || "—"}</dd></div>
+          <div><dt>الدور</dt><dd>{normalizeRole(role) === "rep_bank" ? "الممثل الرسمي" : "موظف بنك دم"}</dd></div>
         </dl>
       </section>
       <h2 className="org-h2 mt-4">وظائف المؤسسة</h2>

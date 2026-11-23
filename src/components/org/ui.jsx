@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const STATUS = {
@@ -29,7 +29,7 @@ export function Notice({ type = "success", children, onClose }) {
   );
 }
 
-export function Field({ id, label, required, error, hint, ltr, children }) {
+export function Field({ id, label, required, error, hint, children }) {
   return (
     <div className="mb-3">
       <label className="form-label" htmlFor={id}>{required && <span className="org-req" aria-hidden="true">* </span>}{label}</label>
@@ -47,54 +47,14 @@ export function TextInput({ id, ltr, error, ...rest }) {
   );
 }
 
-export function ConfirmDialog({ title, text, confirmText, danger, busy, onConfirm, onCancel }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    ref.current?.focus();
-    const k = (e) => e.key === "Escape" && !busy && onCancel();
-    document.addEventListener("keydown", k);
-    return () => document.removeEventListener("keydown", k);
-  }, [busy, onCancel]);
-  return (
-    <div className="org-overlay" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && !busy && onCancel()}>
-      <div className="org-modal" role="alertdialog" aria-modal="true" aria-labelledby="cd-t" aria-describedby="cd-d">
-        <h2 id="cd-t">{title}</h2>
-        <p id="cd-d">{text}</p>
-        <div className="org-modal-actions">
-          <button ref={ref} type="button" className="btn btn-outline-secondary" onClick={onCancel} disabled={busy}>إلغاء</button>
-          <button type="button" className={`btn ${danger ? "btn-danger" : "btn-primary"}`} onClick={onConfirm} disabled={busy}>
-            {busy ? "جاري التنفيذ..." : confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function Pagination({ meta, onPage }) {
-  if (!meta) return null;
+  if (!meta || meta.last_page <= 1) return null;
   return (
     <div className="org-pager">
       <span>الصفحة {meta.page} من {meta.last_page} · {meta.per_page} سجلات في الصفحة</span>
       <div>
         <button type="button" className="btn btn-outline-secondary btn-sm" disabled={meta.page <= 1} onClick={() => onPage(meta.page - 1)}>السابق</button>
         <button type="button" className="btn btn-outline-secondary btn-sm" disabled={meta.page >= meta.last_page} onClick={() => onPage(meta.page + 1)}>التالي</button>
-      </div>
-    </div>
-  );
-}
-
-export function ActivationLinkBox({ url }) {
-  const [copied, setCopied] = useState(false);
-  if (!url) return null;
-  const copy = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ } };
-  return (
-    <div className="org-link-box">
-      <strong>رابط التفعيل</strong>
-      <span className="org-hint">لمرة واحدة وصالح 48 ساعة. شاركه مع صاحب الحساب.</span>
-      <div className="org-link-row">
-        <code dir="ltr">{url}</code>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={copy}>{copied ? "تم النسخ" : "نسخ"}</button>
       </div>
     </div>
   );

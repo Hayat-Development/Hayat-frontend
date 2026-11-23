@@ -6,6 +6,7 @@ import {
   logoutUser,
   getApiErrorMessages,
 } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -66,12 +67,8 @@ export default function DashboardPage() {
       localStorage.removeItem("hayat_user");
       sessionStorage.removeItem("hayat_challenge_id");
 
-      navigate("/login", {
-        replace: true,
-        state: {
-          message: "تم تسجيل الخروج بنجاح.",
-        },
-      });
+      showFlashMessage("تم تسجيل الخروج بنجاح.");
+      navigate("/login", { replace: true });
     } catch (err) {
       if (err.status === 401) {
         localStorage.removeItem("hayat_token");

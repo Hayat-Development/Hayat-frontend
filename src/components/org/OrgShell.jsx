@@ -4,6 +4,7 @@ import { useSession } from "../../context/SessionContext";
 import { ROLES, normalizeRole } from "../../constants/org";
 import { clearAuth } from "../../utils/org";
 import { logoutUser } from "../../api";
+import { showFlashMessage } from "../../flashMessage";
 import { ErrorScreen } from "./ui";
 
 export default function OrgShell({ title, actions, children }) {
@@ -14,17 +15,28 @@ export default function OrgShell({ title, actions, children }) {
   const suspended = userRole !== ROLES.ADMIN && s?.bank?.status === "suspended";
 
   async function logout() {
-    try { await logoutUser(); } catch {}
-    clearAuth();
-    navigate("/login", { replace: true });
+    try { await logoutUser(); } catch {
+      // The browser session can still be cleared if the server is unavailable.
+    } finally {
+      clearAuth();
+      showFlashMessage("تم تسجيل الخروج بنجاح.");
+      navigate("/login", { replace: true });
+    }
   }
 
   const links = userRole === ROLES.ADMIN
-    ? [{ to: "/admin/banks", icon: "ti-building-hospital", text: "بنوك الدم" }]
+    ? [
+        { to: "/admin/banks", icon: "ti-building-hospital", text: "بنوك الدم" },
+        { to: "/admin/users", icon: "ti-users", text: "المستخدمون" },
+        { to: "/admin/suspended", icon: "ti-ban", text: "الموقوفون" },
+      ]
     : suspended ? [] : [
         { to: "/org", icon: "ti-layout-dashboard", text: "اللوحة", end: true },
         { soon: true, icon: "ti-droplet", text: "الطلبات" },
-        ...(userRole === ROLES.REP ? [{ to: "/org/staff", icon: "ti-users", text: "إدارة الموظفين" }] : []),
+        ...(userRole === ROLES.REP ? [
+          { to: "/org/staff", icon: "ti-users", text: "إدارة الموظفين", end: true },
+          { to: "/org/staff/suspended", icon: "ti-ban", text: "الموظفون الموقوفون" },
+        ] : []),
       ];
 
   if (!suspended) links.push({ to: "/settings", icon: "ti-settings", text: "الإعدادات" });

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { registerUser, getApiErrorMessages } from "../../api";
+import { mapFieldErrors } from "../../utils/org";
 import { useState } from "react";
 
 const initialForm = {
@@ -108,7 +109,16 @@ export default function Register() {
             await registerUser(form);
             navigate("/verify-email");
         } catch (error) {
-            setMessage(getApiErrorMessages(error).join(" - "));
+            const errors = mapFieldErrors(error, {
+                name: "fullName", national_id: "nationalId", password_confirmation: "confirmPassword",
+                blood_type: "bloodType", last_donation_date: "lastDonation",
+            });
+            const fieldErrors = Object.fromEntries(Object.entries(errors).filter(([key]) => Object.hasOwn(initialForm, key)));
+            const generalErrors = Object.entries(errors).filter(([key]) => !Object.hasOwn(initialForm, key)).map(([, value]) => value);
+            setErrors(fieldErrors);
+            if (generalErrors.length || !Object.keys(fieldErrors).length) {
+                setMessage((generalErrors.length ? generalErrors : getApiErrorMessages(error)).join(" - "));
+            }
         } finally {
             setLoading(false);
         }
