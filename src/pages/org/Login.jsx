@@ -1,7 +1,8 @@
 
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { loginUser, getApiErrorMessages } from "../api";
+import { useNavigate } from "react-router-dom";
+import { loginUser, getApiErrorMessages } from "../../api";
+import { MESSAGES, canonicalCode, roleHome } from "../../constants/org";
 
 function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -9,12 +10,9 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading, setLoading] = useState(false);
 
-
-  
-async function handleSubmit(event) {
+  async function handleSubmit(event) {
   event.preventDefault();
 
   if (loading) return;
@@ -32,14 +30,7 @@ async function handleSubmit(event) {
     const result = await loginUser(identifier, password);
 
     const user = result.data.user;
-
-    // توجيه مؤقت لحين تجهيز لوحات التحكم
-    const destination = user.dashboard_key === "system_admin"
-      ? "/admin/blood-banks"
-      : user.dashboard_key === "organization"
-        ? "/institution/dashboard"
-        : "/dashboard";
-    navigate(destination, { replace: true });
+    navigate(roleHome(user.role), { replace: true });
 
   } catch (error) {
     if (
@@ -57,6 +48,12 @@ async function handleSubmit(event) {
         navigate("/verify-email");
         return;
       }
+    }
+
+    const code = canonicalCode(error.data?.code);
+    if (MESSAGES[code] && ["ACCOUNT_SUSPENDED", "ORG_SUSPENDED", "INVALID_CREDENTIALS"].includes(code)) {
+      setError(code === "ORG_SUSPENDED" && error.data?.reason ? `${MESSAGES[code]} السبب: ${error.data.reason}` : MESSAGES[code]);
+      return;
     }
 
     setError(
@@ -92,27 +89,8 @@ async function handleSubmit(event) {
                         خطوة بسيطة، وبترجع تكمّل أثر عطائك.
                       </p>
 
-                      {location.state?.message && (
-                        <div className="alert alert-success sprint-alert" role="status">
-                          <i className="ti ti-circle-check" />
-                          {location.state.message}
-                        </div>
-                      )}
-
                       {error && (
-  <div
-    role="alert"
-    style={{
-      backgroundColor: "#ffe0e0",
-      color: "#b00020",
-      padding: "15px",
-      marginBottom: "50px",
-      border: "2px solid red",
-      borderRadius: "8px",
-    }}
-  >
-    {error}
-  </div>
+  <div role="alert" className="org-notice org-notice-error"><i className="ti ti-alert-circle" aria-hidden="true" /><span>{error}</span></div>
 )}
 
                       <form onSubmit={handleSubmit} noValidate>
@@ -210,6 +188,7 @@ async function handleSubmit(event) {
                         أول مرة معنا؟{" "}
                         <a href="/register">أنشئ حساب متبرع</a>
                       </div>
+
                     </div>
                   </div>
                 </div>

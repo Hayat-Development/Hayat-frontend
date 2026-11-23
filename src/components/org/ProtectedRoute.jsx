@@ -1,11 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { getCurrentUser } from "../api";
+import { getCurrentUser } from "../../api";
 
-export default function ProtectedRoute({ allowedRoles }) {
+export default function ProtectedRoute() {
   const [status, setStatus] = useState("loading");
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -28,8 +27,8 @@ export default function ProtectedRoute({ allowedRoles }) {
           "hayat_user",
           JSON.stringify(user)
         );
-        setUser(user);
-        setStatus(allowedRoles?.length && !allowedRoles.includes(user.role) ? "forbidden" : "authorized");
+
+        setStatus("authorized");
       } catch (error) {
         if (!active) return;
 
@@ -48,7 +47,7 @@ export default function ProtectedRoute({ allowedRoles }) {
     return () => {
       active = false;
     };
-  }, [allowedRoles]);
+  }, []);
 
   if (status === "loading") {
     return <p style={{ textAlign: "center", marginTop: 80 }}>
@@ -66,11 +65,6 @@ export default function ProtectedRoute({ allowedRoles }) {
 
   if (status === "unauthorized") {
     return <Navigate to="/login" replace />;
-  }
-
-  if (status === "forbidden") {
-    const target = user?.dashboard_key === "system_admin" ? "/admin/blood-banks" : user?.dashboard_key === "organization" ? "/institution/dashboard" : "/dashboard";
-    return <Navigate to={target} replace />;
   }
 
   return <Outlet />;

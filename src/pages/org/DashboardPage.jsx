@@ -5,8 +5,9 @@ import {
   getCurrentUser,
   logoutUser,
   getApiErrorMessages,
-} from "../api";
-import { showFlashMessage } from "../flashMessage";
+} from "../../api";
+import { showFlashMessage } from "../../flashMessage";
+import { clearAuth } from "../../utils/org";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -63,13 +64,9 @@ export default function DashboardPage() {
     try {
       await logoutUser();
     } catch {
-      // Local logout must still work when the backend is unavailable.
+      // The browser session can still be cleared if the server is unavailable.
     }
-
-    localStorage.removeItem("hayat_token");
-    localStorage.removeItem("hayat_user");
-    sessionStorage.removeItem("hayat_challenge_id");
-    setLoggingOut(false);
+    clearAuth();
     showFlashMessage("تم تسجيل الخروج بنجاح.");
     navigate("/login", { replace: true });
   }

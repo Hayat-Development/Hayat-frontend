@@ -1,6 +1,10 @@
-
-const defaultApiUrl = import.meta.env.DEV ? "/api/v1" : "https://hayat-backend-lh8k.onrender.com/api/v1";
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || defaultApiUrl).replace(/\/$/, "");
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "/api/v1" : "https://hayat-backend-lh8k.onrender.com/api/v1")
+)
+  .replace(/^\[|\]$/g, "")
+  .trim().replace(/\/$/, "");
 
 
 export async function apiRequest(path, options = {}) {
@@ -9,6 +13,9 @@ export async function apiRequest(path, options = {}) {
   const publicPaths = [
     "/auth/register",
     "/auth/login",
+    "/auth/email",
+    "/auth/email/verify",
+    "/auth/email/resend",
     "/auth/forgot-password",
     "/auth/reset-password",
   ];
@@ -33,6 +40,7 @@ export async function apiRequest(path, options = {}) {
     if (!response.ok) {
         const error = new Error(data.message || "حدث خطأ أثناء الاتصال بالخادم");
         error.status = response.status;
+        error.retryAfter = Number(response.headers.get("Retry-After"));
         error.data = data;
         throw error;
     }
@@ -88,22 +96,6 @@ export function getApiErrorMessages(error) {
     return [error.message || "حدث خطأ غير متوقع"];
 }
 
-export function getApiFieldErrors(error, fieldMap = {}) {
-    const apiErrors = error.data?.errors;
-
-    if (!apiErrors || typeof apiErrors !== "object") {
-        return {};
-    }
-
-    return Object.entries(apiErrors).reduce((result, [apiField, messages]) => {
-        const formField = fieldMap[apiField] || apiField;
-        result[formField] = (Array.isArray(messages) ? messages : [messages])
-            .map(String)
-            .join(" - ");
-        return result;
-    }, {});
-}
-
 
 
 export async function verifyEmail(code) {
@@ -146,28 +138,6 @@ export async function resendVerificationCode() {
     return result;
 }
 
-export async function updateVerificationEmail(email) {
-    const challengeId = sessionStorage.getItem("hayat_challenge_id");
-
-    if (!challengeId) {
-        throw new Error("جلسة التحقق غير موجودة. يرجى التسجيل مجدداً.");
-    }
-
-    const result = await apiRequest("/auth/email", {
-        method: "PATCH",
-        body: JSON.stringify({
-            challenge_id: challengeId,
-            email: email.trim(),
-        }),
-    });
-
-    if (result.data?.challenge_id) {
-        sessionStorage.setItem("hayat_challenge_id", result.data.challenge_id);
-    }
-
-    return result;
-}
-
 
 
 
@@ -195,9 +165,9 @@ export async function loginUser(login, password) {
 }
 
 
-export async function getCurrentUser() {
+export async function getCurrentUser({ signal } = {}) {
     const result = await apiRequest("/auth/me", {
-        method: "GET",
+        signal,
     });
 
     return result.data?.user ?? result.data;
@@ -246,53 +216,13 @@ export async function resetPassword(password, passwordConfirmation) {
     });
 }
 
-export const getBloodBanks = () => apiRequest("/banks");
-
-export const getAdminUsers = (search = "") => apiRequest(`/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`);
-
-export const updateAdminUserStatus = (id, status, reason = null) => apiRequest(`/admin/users/${id}/status`, {
-  method: "PATCH",
-  body: JSON.stringify({ status, reason }),
-});
-
-export const createBloodBank = (form) => apiRequest("/banks", {
-  method: "POST",
-  body: JSON.stringify({
-    name: form.name,
-    region: `${form.city}، ${form.area}`,
-    address: form.address || null,
-    representative: {
-      name: form.representative,
-      email: form.representativeEmail,
-      phone: form.representativePhone,
-      national_id: form.representativeNationalId,
-      password: form.password,
-      password_confirmation: form.passwordConfirmation,
-    },
-  }),
-});
-
-export const updateBloodBankStatus = (id, status, reason = null) => apiRequest(`/banks/${id}/status`, {
-  method: "PATCH",
-  body: JSON.stringify({ status, reason }),
-});
-
-export const getStaff = (search = "") => apiRequest(`/org/staff${search ? `?search=${encodeURIComponent(search)}` : ""}`);
-
-export const createStaff = (form) => apiRequest("/org/staff", {
-  method: "POST",
-  body: JSON.stringify({
-    name: form.name,
-    email: form.email,
-    phone: form.phone,
-    national_id: form.nationalId,
-    password: form.password,
-    password_confirmation: form.passwordConfirmation,
-  }),
-});
-
-export const updateStaffStatus = (id, status, reason = null) => apiRequest(`/org/staff/${id}/status`, {
-  method: "PATCH",
-  body: JSON.stringify({ status, reason }),
-});
-
+export async function updateVerificationEmail(email) {
+    const challengeId = sessionStorage.getItem("hayat_challenge_id");
+    if (!challengeId) throw new Error("جلسة التحقق غير موجودة. يرجى تسجيل الدخول مجددًا.");
+    const result = await apiRequest("/auth/email", {
+        method: "PATCH",
+        body: JSON.stringify({ challenge_id: challengeId, email: email.trim() }),
+    });
+    sessionStorage.setItem("hayat_challenge_id", result.data.challenge_id);
+    return result;
+}
