@@ -92,7 +92,7 @@ function SuspendedList({ category }) {
           </>}
       {selection?.deleting && <ActionDialog danger title={`حذف ${selection.record.name} نهائيًا؟`}
         text={category === "banks"
-          ? "لا يمكن استرجاع المؤسسة بعد الحذف. تبقى حسابات فريقها محفوظة وتنقطع صلتها بالمؤسسة."
+          ? "ستفقد المؤسسة بياناتها التشغيلية، وسيُحذف حساب الممثل الرسمي وكل حسابات الموظفين نهائيًا. ستظل التبرعات السابقة محفوظة، ولن تظهر المؤسسة ضمن خيارات التبرع الجديدة."
           : "لا يمكن استرجاع الحساب بعد الحذف النهائي."}
         confirmText="تأكيد الحذف النهائي" save={() => deleteRecord(selection.record.id)}
         onDone={completed} onCancel={() => setSelection(null)} />}
