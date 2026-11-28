@@ -12,8 +12,6 @@ import {
 import Login from "./pages/org/Login";
 import Register from "./pages/org/Register";
 import VerifyEmail from "./pages/org/VerifyEmail";
-import ProtectedRoute from "./components/org/ProtectedRoute";
-import DashboardPage from "./pages/org/DashboardPage";
 import ForgotPasswordPage from "./pages/org/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/org/ResetPasswordPage";
 import "./App.css";
@@ -29,6 +27,9 @@ import SettingsPage from "./pages/org/SettingsPage";
 import OrgDashboardPage from "./pages/org/OrgDashboardPage";
 import StaffPage from "./pages/org/StaffPage";
 import SuspendedPage from "./pages/org/SuspendedPage";
+import DonorDashboardPage from "./pages/donor/DonorDashboardPage";
+import DonorProfilePage from "./pages/donor/DonorProfilePage";
+import DonorAvailabilityPage from "./pages/donor/DonorAvailabilityPage";
 
 
 function PageTitle() {
@@ -39,7 +40,7 @@ function PageTitle() {
       "/login": "تسجيل الدخول",
       "/register": "إنشاء حساب",
       "/verify-email": "تأكيد البريد الإلكتروني",
-      "/dashboard": "لوحة التحكم",
+      "/dashboard": "نظرة عامة",
       "/forgot-password": "استعادة كلمة المرور",
       "/reset-password": "تعيين كلمة مرور جديدة",
       "/admin/users": "إدارة المستخدمين",
@@ -51,6 +52,8 @@ function PageTitle() {
       "/org/profile": "الملف المؤسسي",
       "/org/staff": "إدارة الموظفين",
       "/settings": "الإعدادات",
+      "/donor/profile": "الملف الشخصي",
+      "/donor/eligibility": "التوفر والأهلية الأولية",
     };
 
     document.title = `حياة | ${titles[pathname] || (pathname.startsWith("/admin/banks/") ? "تفاصيل المؤسسة" : "الصفحة غير موجودة")}`;
@@ -72,8 +75,10 @@ function App() {
         <Route path="/activate" element={<Navigate to="/login" replace />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+        <Route element={<RoleRoute allow={[ROLES.DONOR]} redirectUnauthorizedRole />}>
+          <Route path="/dashboard" element={<DonorDashboardPage />} />
+          <Route path="/donor/profile" element={<DonorProfilePage />} />
+          <Route path="/donor/eligibility" element={<DonorAvailabilityPage />} />
         </Route>
         <Route element={<RoleRoute allow={[ROLES.ADMIN]} />}>
           <Route path="/admin/banks" element={<BanksAdminPage />} />

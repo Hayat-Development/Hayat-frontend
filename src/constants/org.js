@@ -4,6 +4,7 @@ export const ROLES = {
   STAFF: "staff_bank",
   BANK_REP: "bank_rep",
   BANK_STAFF: "bank_staff",
+  DONOR: "donor",
 };
 
 export function normalizeRole(role) {
@@ -49,7 +50,7 @@ export const MESSAGES = {
   NOT_FOUND: "السجل المطلوب غير موجود.",
   SELF_SUSPEND: "لا يمكن إيقاف حسابك أو الممثل الأخير للمؤسسة.",
   LAST_REP: "لا يمكن إيقاف حسابك أو الممثل الأخير للمؤسسة.",
-  INVALID_CREDENTIALS: "البريد أو كلمة المرور غير صحيحة.",
+  INVALID_CREDENTIALS: "البريد الالكتروني أو كلمة المرور غير صحيحة.",
   NETWORK: "تعذّر الاتصال. ما أدخلته بقي في النموذج.",
 };
 
