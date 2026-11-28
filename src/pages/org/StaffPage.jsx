@@ -49,38 +49,65 @@ export default function StaffPage({ administration = false }) {
       <section className="org-card org-card-table">
         {loading ? <TableSkeleton />
           : error ? <ErrorScreen kind={classifyError(error)} onRetry={reload} />
-          : !data.data.length ? <EmptyState
+            : !data.data.length ? <EmptyState
               title={query ? "لا نتائج مطابقة" : administration ? "لا يوجد مستخدمون بعد" : "لا يوجد موظفون بعد"}
               actionText={!administration && !query ? "إضافة موظف" : undefined} onAction={add} />
-          : <>
-              <table className="org-table">
-                <thead><tr><th>الاسم</th><th>بيانات التواصل</th>{administration && <th>الدور</th>}<th>الحالة</th><th>الإجراء</th></tr></thead>
-                <tbody>
-                  {data.data.map((member) => (
-                    <tr key={member.id}>
-                      <td data-label="الاسم"><strong>{member.name}</strong></td>
-                      <td data-label="بيانات التواصل">
-                        <div className="org-cell">
-                          <span dir="ltr" className="org-ltr">{member.email}</span>
-                          {member.phone && <span dir="ltr" className="org-ltr org-sub">{member.phone}</span>}
-                        </div>
-                      </td>
-                      {administration && <td data-label="الدور">{roleNames[normalizeRole(member.role)] || member.role}</td>}
-                      <td data-label="الحالة">
-                        <div className="org-cell">
-                          <StatusChip status={member.status} />
-                        </div>
-                      </td>
-                      <td data-label="الإجراء">
-                        <button type="button" className="btn btn-outline-danger btn-sm"
-                          onClick={() => setSelected(member)}>إيقاف</button>
-                      </td>
+              : <>
+                <table className="org-table">
+                  <thead>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>بيانات التواصل</th>
+
+                      {administration && <th>الدور</th>}
+                      {administration && <th>فصيلة الدم</th>}
+                      {administration && <th>جهة التوثيق</th>}
+
+                      <th>الحالة</th>
+                      <th>الإجراء</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Pagination meta={data.meta} onPage={(nextPage) => setPageSelection({ search: query, page: nextPage })} />
-            </>}
+                  </thead>
+                  <tbody>
+                    {data.data.map((member) => (
+                      <tr key={member.id}>
+                        <td data-label="الاسم"><strong>{member.name}</strong></td>
+                        <td data-label="بيانات التواصل">
+                          <div className="org-cell">
+                            <span dir="ltr" className="org-ltr">{member.email}</span>
+                            {member.phone && <span dir="ltr" className="org-ltr org-sub">{member.phone}</span>}
+                          </div>
+                        </td>
+                        {administration && <td data-label="الدور">{roleNames[normalizeRole(member.role)] || member.role}</td>}
+                        {administration && (
+                          <td data-label="فصيلة الدم">
+                            {normalizeRole(member.role) === "donor" ? (
+                              <span dir="ltr" className="org-ltr">
+                                {member.donor_profile?.blood_type || "غير معروفة"}
+                              </span>
+                            ) : "—"}
+                          </td>
+                        )}
+
+                        {administration && (
+                          <td data-label="جهة التوثيق">
+                            {member.donor_profile?.blood_type_verified_by_bank?.name || "—"}
+                          </td>
+                        )}
+                        <td data-label="الحالة">
+                          <div className="org-cell">
+                            <StatusChip status={member.status} />
+                          </div>
+                        </td>
+                        <td data-label="الإجراء">
+                          <button type="button" className="btn btn-outline-danger btn-sm"
+                            onClick={() => setSelected(member)}>إيقاف</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination meta={data.meta} onPage={(nextPage) => setPageSelection({ search: query, page: nextPage })} />
+              </>}
       </section>
       {selected && <StatusDialog title={`إيقاف ${selected.name}؟`}
         text="سيُمنع تسجيل الدخول إلى هذا الحساب حتى إعادة تفعيله."

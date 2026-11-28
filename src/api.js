@@ -226,3 +226,67 @@ export async function updateVerificationEmail(email) {
     sessionStorage.setItem("hayat_challenge_id", result.data.challenge_id);
     return result;
 }
+
+
+
+
+
+/* =========================================
+         Donor Profile API
+========================================= */
+
+// Get donor profile
+export const getDonorProfile = () =>
+    apiRequest("/donor/profile");
+
+// Get locations
+export const getDonorLocations = () =>
+    apiRequest("/lookups/locations");
+
+// Get blood types
+export const getDonorBloodTypes = () =>
+    apiRequest("/lookups/blood-types");
+
+// PATCH helper
+const donorPatch = (path, payload) =>
+    apiRequest(path, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+    });
+
+// Update donor profile
+export const saveDonorProfile = (payload) =>
+    donorPatch("/donor/profile", payload);
+
+// Update donor preferences
+export const saveDonorPreferences = (payload) =>
+    donorPatch("/donor/preferences", payload);
+
+
+/* =========================================
+         Donor Email Change API
+========================================= */
+
+const donorEmail = (action, method, payload) =>
+    apiRequest(`/donor/profile/email/${action}`, {
+        method,
+        ...(payload === undefined
+            ? {}
+            : { body: JSON.stringify(payload) }),
+    });
+
+// Start email change
+export const startDonorEmail = (payload) =>
+    donorEmail("change", "POST", payload);
+
+// Verify new email
+export const verifyDonorEmail = (code) =>
+    donorEmail("verify", "POST", { code });
+
+// Resend verification code
+export const resendDonorEmail = () =>
+    donorEmail("resend", "POST");
+
+// Cancel email change
+export const cancelDonorEmail = () =>
+    donorEmail("change", "DELETE");

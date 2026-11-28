@@ -7,7 +7,10 @@ import useOrgRequest from "../../hooks/useOrgRequest";
 import { classifyError, clearAuth } from "../../utils/org";
 import { ErrorScreen, TableSkeleton } from "./ui";
 
-export default function RoleRoute({ allow }) {
+export default function RoleRoute({
+  allow,
+  redirectUnauthorizedRole = false,
+}) {
   const { data: session, error, loading, reload } = useOrgRequest(fetchSession);
   const kind = error && classifyError(error);
 
@@ -21,6 +24,13 @@ export default function RoleRoute({ allow }) {
     onRetry={kind === "network" ? reload : undefined} backTo="/login" backText="العودة لتسجيل الدخول" />;
 
   const role = normalizeRole(session.role);
+  if (!allow.includes(role) && redirectUnauthorizedRole) {
+    const destination = roleHome(role);
+
+    if (destination !== "/dashboard") {
+      return <Navigate to={destination} replace />;
+    }
+  }
   if (!allow.includes(role)) {
     return <ErrorScreen full kind="forbidden" backTo={roleHome(role)}
       detail={role === "staff_bank" ? "إدارة الموظفين متاحة للممثل الرسمي فقط." : undefined} />;
